@@ -1,6 +1,13 @@
+use std::{cell::RefCell, rc::Rc};
+
+fn TEMPAPPLY(function: &str, input: &Value) -> Value{
+    Value::Number(0)
+}
+
+#[derive(Clone)]
 pub enum Value {
     Number(i64),
-    List(Box<dyn ListLike>),
+    List(Rc<dyn ListLike>),
 }
 
 pub enum ListError {
@@ -10,7 +17,6 @@ pub enum ListError {
 
 pub trait ListLike {
     fn index(&self, i: usize) -> Result<Value, ListError>;
-    fn resolve(&self) -> Result<Vec<Value>, ListError>;
 }
 
 struct ExactList{
@@ -20,10 +26,40 @@ struct ExactList{
 struct LazyInductionList<'a> {
     function: &'a str,
     initial_value: Value,
-    resolved: Vec<Value>,
+    resolved: RefCell<Vec<Value>>,
 }
 
 struct LazyMapList<'a> {
     function: &'a str,
-    otherlist: Box<dyn ListLike>,
+    source: Box<dyn ListLike>
+}
+
+impl ListLike for ExactList{
+    fn index(&self, i: usize) -> Result<Value, ListError>{
+        if i >= self.contents.len(){
+            Err(ListError::OutOfBounds)
+        }else{
+            Ok(self.contents[i].clone())
+        }
+    }
+}
+
+impl ListLike for LazyInductionList<'_> {
+    fn index(&self, i: usize) -> Result<Value, ListError>{
+        let mut resolved = self.resolved.borrow_mut();
+        if resolved.len() == 0 {
+            resolved.push(TEMPAPPLY(self.function, &self.initial_value));
+        }
+        while i > resolved.len() {
+            let prevresolved = resolved[resolved.len()-1].clone();
+            resolved.push(TEMPAPPLY(self.function, &prevresolved));
+        }
+        Ok(resolved[i].clone())
+    }
+}
+
+impl ListLike for LazyMapList<'_> {
+    fn index(&self, i: usize) -> Result<Value, ListError>{
+        self.source.index(i).map(|v| TEMPAPPLY(self.function, &v))
+    }
 }
