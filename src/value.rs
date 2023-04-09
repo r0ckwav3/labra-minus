@@ -17,6 +17,7 @@ pub enum ListError {
 
 pub trait ListLike {
     fn index(&self, i: usize) -> Result<Value, ListError>;
+    fn length(&self) -> Result<Value, ListError>;
 }
 
 struct ExactList{
@@ -42,6 +43,10 @@ impl ListLike for ExactList{
             Ok(self.contents[i].clone())
         }
     }
+
+    fn length(&self) -> Result<Value, ListError>{
+        return Ok(Value::Number(self.contents.len() as i64));
+    }
 }
 
 impl ListLike for LazyInductionList<'_> {
@@ -56,10 +61,18 @@ impl ListLike for LazyInductionList<'_> {
         }
         Ok(resolved[i].clone())
     }
+
+    fn length(&self) -> Result<Value, ListError>{
+        return Err(ListError::ResolvingInfiniteList);
+    }
 }
 
 impl ListLike for LazyMapList<'_> {
     fn index(&self, i: usize) -> Result<Value, ListError>{
         self.source.index(i).map(|v| TEMPAPPLY(self.function, &v))
+    }
+
+    fn length(&self) -> Result<Value, ListError>{
+        return self.source.length();
     }
 }
