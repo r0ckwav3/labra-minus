@@ -1,8 +1,5 @@
 use std::{cell::RefCell, rc::Rc};
-
-fn TEMPAPPLY(function: &str, input: &Value) -> Value{
-    Value::Number(0)
-}
+use super::evaluate;
 
 #[derive(Clone)]
 pub enum Value {
@@ -53,11 +50,11 @@ impl ListLike for LazyInductionList<'_> {
     fn index(&self, i: usize) -> Result<Value, ListError>{
         let mut resolved = self.resolved.borrow_mut();
         if resolved.len() == 0 {
-            resolved.push(TEMPAPPLY(self.function, &self.initial_value));
+            resolved.push(evaluate::evaluate(self.function, &self.initial_value));
         }
         while i > resolved.len() {
             let prevresolved = resolved[resolved.len()-1].clone();
-            resolved.push(TEMPAPPLY(self.function, &prevresolved));
+            resolved.push(evaluate::evaluate(self.function, &prevresolved));
         }
         Ok(resolved[i].clone())
     }
@@ -69,7 +66,7 @@ impl ListLike for LazyInductionList<'_> {
 
 impl ListLike for LazyMapList<'_> {
     fn index(&self, i: usize) -> Result<Value, ListError>{
-        self.source.index(i).map(|v| TEMPAPPLY(self.function, &v))
+        self.source.index(i).map(|v| evaluate::evaluate(self.function, &v))
     }
 
     fn length(&self) -> Result<Value, ListError>{
