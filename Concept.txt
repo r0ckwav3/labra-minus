@@ -1,3 +1,9 @@
+-- DISCLAIMER --
+
+This is the original concept of the language, preserved for posterity. Implementation details have changed since the writing of this document.
+
+-- DISCLAIMER --
+
 Labra inspired language
 
 The general feel is to use a lot of map/filter/accumulate operations
@@ -23,7 +29,7 @@ Input to this function
 Sorted by input number:
 0 input: Input, empty list, number
 1 input: Flatten/accumulate, Encapsulate, invert
-2 input: induction, map, index
+2 input: induction, map, index, add
 
 Notes:
 addition can be done with accumulation
