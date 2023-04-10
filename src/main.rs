@@ -72,4 +72,16 @@ mod tests {
             panic!("Bad return type");
         }
     }
+
+    #[test]
+    fn basic_recursion_test() {
+        let expr = "1(0][5]";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
+        if let value::Value::Number(n) = result{
+            assert_eq!(n, 0);
+        }else{
+            panic!("Bad return type");
+        }
+    }
 }

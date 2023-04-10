@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use crate::value::LazyConcatList;
+use crate::value::LazyInductionList;
 
 use super::value;
 use super::value::RuntimeError;
@@ -43,7 +44,9 @@ pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeE
             _ => Err(RuntimeError::MismatchedTypes)
         },
 
-        ParseTree::Induction(pt1, pt2) => Ok(Value::Number(0)),
+        ParseTree::Induction(pt1, pt2) => {
+            Ok(Value::List(Rc::new(LazyInductionList::new((**pt2).clone(), evaluate(pt1, input)?))))
+        },
 
         ParseTree::Map(pt1, pt2) => Ok(Value::Number(0))
     }
