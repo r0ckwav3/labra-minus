@@ -8,6 +8,7 @@ pub enum Value {
     List(Rc<dyn ListLike>),
 }
 
+#[derive(Debug)]
 pub enum RuntimeError {
     OutOfBounds,
     ResolvingInfiniteList
@@ -94,7 +95,7 @@ impl LazyMapList{
 
 impl ListLike for LazyMapList {
     fn index(&self, i: usize) -> Result<Value, RuntimeError>{
-        self.source.index(i).map(|v| evaluate::evaluate(&self.function, &v))
+        self.source.index(i).and_then(|v| evaluate::evaluate(&self.function, &v))
     }
 
     fn length(&self) -> Result<i64, RuntimeError>{
