@@ -11,12 +11,14 @@ pub enum Value {
 #[derive(Debug)]
 pub enum RuntimeError {
     OutOfBounds,
-    ResolvingInfiniteList
+    ResolvingInfiniteList,
+    MismatchedTypes,
+    NegativeIndex
 }
 
 pub trait ListLike {
     fn index(&self, i: usize) -> Result<Value, RuntimeError>;
-    fn length(&self) -> Result<i64, RuntimeError>;
+    fn length(&self) -> Result<usize, RuntimeError>;
 }
 
 pub struct ExactList{
@@ -31,7 +33,13 @@ pub struct LazyInductionList {
 
 pub struct LazyMapList {
     function: ParseTree,
-    source: Box<dyn ListLike>
+    source: Rc<dyn ListLike>
+}
+
+pub struct LazyConcatList {
+    first: Rc<dyn ListLike>,
+    second: Rc<dyn ListLike>,
+    firstlen: Option<usize>
 }
 
 impl ExactList{
@@ -51,8 +59,8 @@ impl ListLike for ExactList{
         }
     }
 
-    fn length(&self) -> Result<i64, RuntimeError>{
-        return Ok(self.contents.len() as i64);
+    fn length(&self) -> Result<usize, RuntimeError>{
+        return Ok(self.contents.len());
     }
 }
 
@@ -79,13 +87,13 @@ impl ListLike for LazyInductionList {
         Ok(resolved[i].clone())
     }
 
-    fn length(&self) -> Result<i64, RuntimeError>{
+    fn length(&self) -> Result<usize, RuntimeError>{
         return Err(RuntimeError::ResolvingInfiniteList);
     }
 }
 
 impl LazyMapList{
-    pub fn new(f: ParseTree, s: Box<dyn ListLike>) -> LazyMapList{
+    pub fn new(f: ParseTree, s: Rc<dyn ListLike>) -> LazyMapList{
         LazyMapList{
             function: f,
             source: s
@@ -98,7 +106,37 @@ impl ListLike for LazyMapList {
         self.source.index(i).and_then(|v| evaluate::evaluate(&self.function, &v))
     }
 
-    fn length(&self) -> Result<i64, RuntimeError>{
+    fn length(&self) -> Result<usize, RuntimeError>{
         return self.source.length();
+    }
+}
+
+impl LazyConcatList{
+    pub fn new(l1: Rc<dyn ListLike>, l2: Rc<dyn ListLike>) -> LazyConcatList{
+        let fl = l1.length().ok();
+        LazyConcatList{
+            first: l1,
+            second: l2,
+            firstlen: fl
+        }
+    }
+}
+
+impl ListLike for LazyConcatList {
+    fn index(&self, i: usize) -> Result<Value, RuntimeError>{
+        match self.firstlen {
+            None => self.first.index(i),
+            Some(len) => {
+                if i < len {
+                    self.first.index(i)
+                } else {
+                    self.second.index(i - len)
+                }
+            }
+        }
+    }
+
+    fn length(&self) -> Result<usize, RuntimeError>{
+        return Ok(self.first.length()? + self.second.length()?);
     }
 }

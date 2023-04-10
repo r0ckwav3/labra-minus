@@ -1,10 +1,13 @@
 use std::rc::Rc;
 
+use crate::value::LazyConcatList;
+
 use super::value;
+use super::value::RuntimeError;
 use super::value::Value;
 use super::parsetree::ParseTree;
 
-pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, value::RuntimeError>{
+pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeError>{
     match expression {
         ParseTree::Number(n) => Ok(Value::Number(n.clone())),
 
@@ -14,7 +17,7 @@ pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, value::R
 
         ParseTree::Length(pt) => match evaluate(pt, input)? {
             Value::Number(n) => Ok(Value::Number(n.abs())),
-            Value::List(l) => Ok(Value::Number(l.length()?)),
+            Value::List(l) => Ok(Value::Number(l.length()? as i64)),
         },
 
         ParseTree::Encapsulate(pt) => {
@@ -22,7 +25,11 @@ pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, value::R
             Ok(Value::List(Rc::new(value::ExactList::new(newlist))))
         },
 
-        ParseTree::Addition(pt1, pt2) => Ok(Value::Number(0)),
+        ParseTree::Addition(pt1, pt2) => match (evaluate(pt1, input)?, evaluate(pt2, input)?){
+            (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1+n2)),
+            (Value::List(l1), Value::List(l2)) => Ok(Value::List(Rc::new(LazyConcatList::new(l1, l2)))),
+            _ => Err(RuntimeError::MismatchedTypes)
+        },
 
         ParseTree::IndexSubtraction(pt1, pt2) => Ok(Value::Number(0)),
 
@@ -127,4 +134,5 @@ mod tests {
             panic!("Bad return type");
         }
     }
+    // tests for more complicated operations will use parse, and thus will be in main
 }
