@@ -45,6 +45,7 @@ mod tests {
             panic!("Bad return type");
         }
     }
+
     #[test]
     fn single_input() {
         let mut result = evaluate(&ParseTree::Input, &Value::Number(5)).expect("evaluation failure");
@@ -57,6 +58,8 @@ mod tests {
         let newlist = vec!{Value::Number(5)};
         result = evaluate(&ParseTree::Input, &Value::List(Rc::new(value::ExactList::new(newlist)))).expect("evaluation failure");
         if let Value::List(l) = result{
+            let len = l.length().expect("indexing failure");
+            assert_eq!(len, 1);
             if let Value::Number(n) = l.index(0).expect("indexing failure"){
                 assert_eq!(n, 5);
             }else{
@@ -65,9 +68,32 @@ mod tests {
         }else{
             panic!("Bad return type");
         }
-        // let a = parse("()").expect("failed to parse");
-        // assert_eq!(a, ParseTree::Input);
-        // let a = parse("[]").expect("failed to parse");
-        // assert_eq!(a, ParseTree::EmptyList);
+    }
+
+    #[test]
+    fn single_emptylist() {
+        let result = evaluate(&ParseTree::EmptyList, &Value::Number(99)).expect("evaluation failure");
+        if let Value::List(l) = result{
+            let len = l.length().expect("indexing failure");
+            assert_eq!(len, 0);
+        }else{
+            panic!("Bad return type");
+        }
+    }
+
+    #[test]
+    fn single_encapsulate() {
+        let result = evaluate(&ParseTree::Encapsulate(Box::new(ParseTree::Number(7))), &Value::Number(99)).expect("evaluation failure");
+        if let Value::List(l) = result{
+            let len = l.length().expect("indexing failure");
+            assert_eq!(len, 1);
+            if let Value::Number(n) = l.index(0).expect("indexing failure"){
+                assert_eq!(n, 7);
+            }else{
+                panic!("Bad return type");
+            }
+        }else{
+            panic!("Bad return type");
+        }
     }
 }
