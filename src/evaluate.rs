@@ -18,7 +18,7 @@ pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, value::R
         },
 
         ParseTree::Encapsulate(pt) => {
-            let mut newlist = vec!{evaluate(pt, input)?};
+            let newlist = vec!{evaluate(pt, input)?};
             Ok(Value::List(Rc::new(value::ExactList::new(newlist))))
         },
 
@@ -92,6 +92,37 @@ mod tests {
             }else{
                 panic!("Bad return type");
             }
+        }else{
+            panic!("Bad return type");
+        }
+    }
+
+    #[test]
+    fn single_length() {
+        let mut result = evaluate(&ParseTree::Length(Box::new(ParseTree::Number(4))), &Value::Number(0)).expect("evaluation failure");
+        if let Value::Number(n) = result{
+            assert_eq!(n, 4);
+        }else{
+            panic!("Bad return type");
+        }
+
+        result = evaluate(&ParseTree::Length(Box::new(ParseTree::Number(-94))), &Value::Number(0)).expect("evaluation failure");
+        if let Value::Number(n) = result{
+            assert_eq!(n, 94);
+        }else{
+            panic!("Bad return type");
+        }
+
+        result = evaluate(&ParseTree::Length(Box::new(ParseTree::EmptyList)), &Value::Number(0)).expect("evaluation failure");
+        if let Value::Number(n) = result{
+            assert_eq!(n, 0);
+        }else{
+            panic!("Bad return type");
+        }
+
+        result = evaluate(&ParseTree::Length(Box::new(ParseTree::Encapsulate(Box::new(ParseTree::Number(34))))), &Value::Number(0)).expect("evaluation failure");
+        if let Value::Number(n) = result{
+            assert_eq!(n, 1);
         }else{
             panic!("Bad return type");
         }
