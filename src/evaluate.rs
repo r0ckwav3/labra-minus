@@ -1,5 +1,6 @@
-use super::value;
+use super::value::Value;
+use super::parsetree::ParseTree;
 
-pub fn evaluate(expression: &str, input: &value::Value) -> value::Value{
-    value::Value::Number(0)
+pub fn evaluate(expression: &ParseTree, input: &Value) -> Value{
+    Value::Number(0)
 }

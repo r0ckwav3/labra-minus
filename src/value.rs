@@ -1,5 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 use super::evaluate;
+use super::parsetree::ParseTree;
 
 #[derive(Clone)]
 pub enum Value {
@@ -22,13 +23,13 @@ struct ExactList{
 }
 
 struct LazyInductionList<'a> {
-    function: &'a str,
+    function: ParseTree<'a>,
     initial_value: Value,
     resolved: RefCell<Vec<Value>>,
 }
 
 struct LazyMapList<'a> {
-    function: &'a str,
+    function: ParseTree<'a>,
     source: Box<dyn ListLike>
 }
 
@@ -50,11 +51,11 @@ impl ListLike for LazyInductionList<'_> {
     fn index(&self, i: usize) -> Result<Value, ListError>{
         let mut resolved = self.resolved.borrow_mut();
         if resolved.len() == 0 {
-            resolved.push(evaluate::evaluate(self.function, &self.initial_value));
+            resolved.push(evaluate::evaluate(&self.function, &self.initial_value));
         }
         while i > resolved.len() {
             let prevresolved = resolved[resolved.len()-1].clone();
-            resolved.push(evaluate::evaluate(self.function, &prevresolved));
+            resolved.push(evaluate::evaluate(&self.function, &prevresolved));
         }
         Ok(resolved[i].clone())
     }
@@ -66,7 +67,7 @@ impl ListLike for LazyInductionList<'_> {
 
 impl ListLike for LazyMapList<'_> {
     fn index(&self, i: usize) -> Result<Value, ListError>{
-        self.source.index(i).map(|v| evaluate::evaluate(self.function, &v))
+        self.source.index(i).map(|v| evaluate::evaluate(&self.function, &v))
     }
 
     fn length(&self) -> Result<Value, ListError>{
