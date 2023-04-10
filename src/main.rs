@@ -142,4 +142,47 @@ mod tests {
             panic!("Bad return type");
         }
     }
+
+    #[test]
+    #[ignore]
+    fn flatten_test(){
+        /*
+        # create a list of lists
+        0[](1[])[](2[](3[])[])(4[](5[])[])
+        (
+        # We input some list l
+        0[](()[0][])(()[])
+        # A list containing {0, l[0], l}
+        (
+          ()[0](1)[]
+          (()[1](()[2][()[0](1)])[])
+          (()[2][])
+        ]
+        # A list L such that L[i] = {i, sum from l[0] to l[i], l}
+        [()()[1]]
+        # L[l.size()-1] = {l.size()-1, sum of l, l}
+        [1]
+        # extract sum of l
+        ][1]
+        # call our function
+        */
+        let expr = "0[](1[])[](2[](3[])[])(4[](5[])[])(0[](()[0][])(()[])(()[0](1)[](()[1](()[2][()[0](1)])[])(()[2][])][()()[1]][1]][1]";
+        // output should be [0,1,2,3,4,5]
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
+        if let value::Value::List(l) = result{
+            let len = l.length().expect("indexing failure");
+            assert_eq!(len, 6);
+            match l.index(0).expect("indexing failure"){
+                value::Value::Number(n) => assert_eq!(n, 0),
+                _ => panic!("bad return type")
+            }
+            match l.index(4).expect("indexing failure"){
+                value::Value::Number(n) => assert_eq!(n, 4),
+                _ => panic!("bad return type")
+            }
+        }else{
+            panic!("Bad return type");
+        }
+    }
 }
