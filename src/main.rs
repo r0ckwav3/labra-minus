@@ -31,6 +31,7 @@ mod tests {
         let expr = "2[](3[])([][])";
         // should return [2,3,[]]
         let pt = parsetree::parse(expr).expect("parse error");
+        println!("{:?}", pt);
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
         if let value::Value::List(l) = result{
             let len = l.length().expect("indexing failure");
@@ -40,7 +41,7 @@ mod tests {
                 _ => panic!("bad return type")
             }
             match l.index(1).expect("indexing failure"){
-                value::Value::Number(n) => assert_eq!(n, 2),
+                value::Value::Number(n) => assert_eq!(n, 3),
                 _ => panic!("bad return type")
             }
         }else{

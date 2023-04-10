@@ -140,3 +140,55 @@ impl ListLike for LazyConcatList {
         return Ok(self.first.length()? + self.second.length()?);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn simple_concat(){
+        let el1 = ExactList::new(vec![Value::Number(1), Value::Number(2)]);
+        let el2 = ExactList::new(vec![Value::Number(3), Value::Number(4)]);
+        let lcl = LazyConcatList::new(Rc::new(el1), Rc::new(el2));
+
+        assert_eq!(lcl.length().expect("length error"), 4);
+        match lcl.index(0).expect("length error") {
+            Value::Number(n) => assert_eq!(n, 1),
+            _ => panic!("Bad return type")
+        }
+        match lcl.index(1).expect("length error") {
+            Value::Number(n) => assert_eq!(n, 2),
+            _ => panic!("Bad return type")
+        }
+        match lcl.index(2).expect("length error") {
+            Value::Number(n) => assert_eq!(n, 3),
+            _ => panic!("Bad return type")
+        }
+        match lcl.index(3).expect("length error") {
+            Value::Number(n) => assert_eq!(n, 4),
+            _ => panic!("Bad return type")
+        }
+    }
+    #[test]
+    fn compound_concat(){
+        let el1 = ExactList::new(vec![Value::Number(1), Value::Number(2)]);
+        let el2 = ExactList::new(vec![Value::Number(3), Value::Number(4)]);
+        let el3 = ExactList::new(vec![Value::Number(5), Value::Number(6)]);
+        let lcl1 = LazyConcatList::new(Rc::new(el1), Rc::new(el2));
+        let lcl2 = LazyConcatList::new(Rc::new(lcl1), Rc::new(el3));
+
+        assert_eq!(lcl2.length().expect("length error"), 6);
+        match lcl2.index(0).expect("index error") {
+            Value::Number(n) => assert_eq!(n, 1),
+            _ => panic!("Bad return type")
+        }
+        match lcl2.index(2).expect("index error") {
+            Value::Number(n) => assert_eq!(n, 3),
+            _ => panic!("Bad return type")
+        }
+        match lcl2.index(4).expect("index error") {
+            Value::Number(n) => assert_eq!(n, 5),
+            _ => panic!("Bad return type")
+        }
+    }
+}
