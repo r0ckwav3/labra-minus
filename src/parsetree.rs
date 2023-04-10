@@ -13,6 +13,7 @@ pub enum ParseTree{
     Map(Box<ParseTree>, Box<ParseTree>),
 }
 
+#[derive(Debug)]
 pub enum ParseError{
     InvalidCharacter(String),
     UnexpectedEOF,

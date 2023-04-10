@@ -3,5 +3,9 @@ mod evaluate;
 mod parsetree;
 
 fn main() {
-    println!("Hello, world!");
+    let testexpr = "1(0][()()]";
+    match parsetree::parse(testexpr){
+        Ok(pt) => {println!("{:?}", pt);}
+        Err(e) => {println!("Error: {:?}", e);}
+    }
 }
