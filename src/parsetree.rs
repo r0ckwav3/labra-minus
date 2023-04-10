@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ParseTree{
     Number(i64),
     Input,
@@ -117,8 +117,61 @@ pub fn parse_helper(expr: &str, startindex: usize) -> Result<(Option<ParseTree>,
                 _ => ()
             }
         } else {
+            // the other return case doesn't need this because the non-digit check already catches it
+            if innumber {
+                if let Some(numberstr) = expr.get(numberstart..i) {
+                    if let Ok(n) = i64::from_str(numberstr) {
+                        if let None = ans{
+                            ans = Some(ParseTree::Number(n));
+                        } else {
+                            return Err(ParseError::SyntaxError(format!("Found number not leading expression at char {}", i)));
+                        }
+                    } else {
+                        return Err(ParseError::NumberParseError);
+                    }
+                } else {
+                    return Err(ParseError::UnexpectedEOF);
+                }
+            }
+
             return Ok((ans, i));
         }
         i+=1;
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn nonary_operations() {
+        let a = parse("0").expect("failed to parse");
+        assert_eq!(a, ParseTree::Number(0));
+        let a = parse("()").expect("failed to parse");
+        assert_eq!(a, ParseTree::Input);
+        let a = parse("[]").expect("failed to parse");
+        assert_eq!(a, ParseTree::EmptyList);
+    }
+
+    #[test]
+    fn unary_operations() {
+        let a = parse("0()").expect("failed to parse");
+        assert_eq!(a, ParseTree::Length(Box::new(ParseTree::Number(0))));
+        let a = parse("0[]").expect("failed to parse");
+        assert_eq!(a, ParseTree::Encapsulate(Box::new(ParseTree::Number(0))));
+    }
+
+    #[test]
+    fn binary_operations() {
+        let a = parse("0(0)").expect("failed to parse");
+        assert_eq!(a, ParseTree::Addition(Box::new(ParseTree::Number(0)), Box::new(ParseTree::Number(0))));
+        let a = parse("0[0]").expect("failed to parse");
+        assert_eq!(a, ParseTree::IndexSubtraction(Box::new(ParseTree::Number(0)), Box::new(ParseTree::Number(0))));
+        let a = parse("0(0]").expect("failed to parse");
+        assert_eq!(a, ParseTree::Induction(Box::new(ParseTree::Number(0)), Box::new(ParseTree::Number(0))));
+        let a = parse("0[0)").expect("failed to parse");
+        assert_eq!(a, ParseTree::Map(Box::new(ParseTree::Number(0)), Box::new(ParseTree::Number(0))));
     }
 }
