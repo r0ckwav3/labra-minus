@@ -108,4 +108,38 @@ mod tests {
             panic!("Bad return type");
         }
     }
+
+    #[test]
+    fn basic_map_test() {
+        let expr = "2[](3[][])[0)()";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
+        if let value::Value::Number(n) = result{
+            assert_eq!(n, 2);
+        }else{
+            panic!("Bad return type");
+        }
+
+
+        let expr = "2[](3[][])[0)[1]";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
+        if let value::Value::Number(n) = result{
+            assert_eq!(n, 0);
+        }else{
+            panic!("Bad return type");
+        }
+    }
+
+    #[test]
+    fn input_map_test() {
+        let expr = "2[](3[])(5[])[()(()))[1]";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
+        if let value::Value::Number(n) = result{
+            assert_eq!(n, 6);
+        }else{
+            panic!("Bad return type");
+        }
+    }
 }
