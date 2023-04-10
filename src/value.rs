@@ -22,14 +22,14 @@ struct ExactList{
     contents: Vec<Value>
 }
 
-struct LazyInductionList<'a> {
-    function: ParseTree<'a>,
+struct LazyInductionList {
+    function: ParseTree,
     initial_value: Value,
     resolved: RefCell<Vec<Value>>,
 }
 
-struct LazyMapList<'a> {
-    function: ParseTree<'a>,
+struct LazyMapList {
+    function: ParseTree,
     source: Box<dyn ListLike>
 }
 
@@ -47,7 +47,7 @@ impl ListLike for ExactList{
     }
 }
 
-impl ListLike for LazyInductionList<'_> {
+impl ListLike for LazyInductionList {
     fn index(&self, i: usize) -> Result<Value, ListError>{
         let mut resolved = self.resolved.borrow_mut();
         if resolved.len() == 0 {
@@ -65,7 +65,7 @@ impl ListLike for LazyInductionList<'_> {
     }
 }
 
-impl ListLike for LazyMapList<'_> {
+impl ListLike for LazyMapList {
     fn index(&self, i: usize) -> Result<Value, ListError>{
         self.source.index(i).map(|v| evaluate::evaluate(&self.function, &v))
     }
