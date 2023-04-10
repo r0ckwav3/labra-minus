@@ -13,7 +13,7 @@ pub enum RuntimeError {
     OutOfBounds,
     ResolvingInfiniteList,
     MismatchedTypes,
-    NegativeIndex
+    NegativeIndex(String)
 }
 
 pub trait ListLike {

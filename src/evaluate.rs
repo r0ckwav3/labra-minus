@@ -31,7 +31,17 @@ pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeE
             _ => Err(RuntimeError::MismatchedTypes)
         },
 
-        ParseTree::IndexSubtraction(pt1, pt2) => Ok(Value::Number(0)),
+        ParseTree::IndexSubtraction(pt1, pt2) => match (evaluate(pt1, input)?, evaluate(pt2, input)?){
+            (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1-n2)),
+            (Value::List(l), Value::Number(n)) => {
+                if let Ok(i) = usize::try_from(n) {
+                    Ok(l.index(i)?)
+                } else {
+                    Err(RuntimeError::NegativeIndex(format!("index: {}", n)))
+                }
+            },
+            _ => Err(RuntimeError::MismatchedTypes)
+        },
 
         ParseTree::Induction(pt1, pt2) => Ok(Value::Number(0)),
 
