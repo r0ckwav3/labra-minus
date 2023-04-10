@@ -78,9 +78,9 @@ impl ListLike for LazyInductionList {
     fn index(&self, i: usize) -> Result<Value, RuntimeError>{
         let mut resolved = self.resolved.borrow_mut();
         if resolved.len() == 0 {
-            resolved.push(evaluate::evaluate(&self.function, &self.initial_value)?);
+            resolved.push(self.initial_value.clone());
         }
-        while i > resolved.len() {
+        while i >= resolved.len() {
             let prevresolved = resolved[resolved.len()-1].clone();
             resolved.push(evaluate::evaluate(&self.function, &prevresolved)?);
         }

@@ -74,12 +74,36 @@ mod tests {
     }
 
     #[test]
-    fn basic_recursion_test() {
+    fn basic_induction_test() {
         let expr = "1(0][5]";
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
         if let value::Value::Number(n) = result{
             assert_eq!(n, 0);
+        }else{
+            panic!("Bad return type");
+        }
+    }
+
+    #[test]
+    fn index0_induction_test() {
+        let expr = "1(0][0]";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
+        if let value::Value::Number(n) = result{
+            assert_eq!(n, 1);
+        }else{
+            panic!("Bad return type");
+        }
+    }
+
+    #[test]
+    fn induction_input_test() {
+        let expr = "2(()(1)][5]";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
+        if let value::Value::Number(n) = result{
+            assert_eq!(n, 7);
         }else{
             panic!("Bad return type");
         }
