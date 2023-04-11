@@ -1,3 +1,4 @@
+use std::fmt;
 use std::{cell::RefCell, rc::Rc};
 use super::evaluate;
 use super::parsetree::ParseTree;
@@ -6,6 +7,40 @@ use super::parsetree::ParseTree;
 pub enum Value {
     Number(i64),
     List(Rc<dyn ListLike>),
+}
+
+impl fmt::Display for Value{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self{
+            Value::Number(n) => write!(f, "{}", n),
+            Value::List(ll) => match ll.length(){
+                Err(RuntimeError::ResolvingInfiniteList) => write!(f, "[...]"),
+                Ok(len) => {
+                    write!(f, "[").and_then(|_| {
+                        let mut finalresult = Ok(());
+                        for i in 0..len{
+                            finalresult = finalresult.or(
+                                match ll.index(i){
+                                    Ok(v) => v.fmt(f),
+                                    Err(_) => Err(fmt::Error)
+                                }.and_then(|_|{
+                                    if i < len-1 {
+                                        write!(f, ", ")
+                                    }else{
+                                        Ok(())
+                                    }
+                                })
+                            )
+                        }
+                        finalresult
+                    }).and_then(|_| {
+                        write!(f, "]")
+                    })
+                },
+                _ => Err(fmt::Error)
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -190,5 +225,40 @@ mod tests {
             Value::Number(n) => assert_eq!(n, 5),
             _ => panic!("Bad return type")
         }
+    }
+
+    #[test]
+    fn format_test(){
+        let a = Value::Number(0);
+        assert_eq!(format!("{}", a), "0");
+        let a = Value::List(Rc::new(ExactList::new(vec![Value::Number(0)])));
+        assert_eq!(format!("{}", a), "[0]");
+        let a = Value::List(Rc::new(ExactList::new(vec![Value::Number(0), Value::Number(5)])));
+        assert_eq!(format!("{}", a), "[0, 5]");
+    }
+
+    #[test]
+    fn advanced_format_test(){
+        let a = Value::List(Rc::new(LazyInductionList::new(ParseTree::EmptyList, Value::Number(0))));
+        assert_eq!(format!("{}", a), "[...]");
+
+        let a = Value::List(Rc::new(LazyMapList::new(
+            ParseTree::Addition(Box::new(ParseTree::Input), Box::new(ParseTree::Input)),
+            Rc::new(ExactList::new(vec![Value::Number(1), Value::Number(2)]))
+        )));
+        assert_eq!(format!("{}", a), "[2, 4]");
+    }
+
+    #[test]
+    fn nested_format_test(){
+        let a = Value::List(Rc::new(ExactList::new(vec![
+            Value::List(Rc::new(LazyInductionList::new(ParseTree::EmptyList, Value::Number(0)))),
+            Value::List(Rc::new(ExactList::new(vec![Value::Number(0), Value::Number(1)]))),
+            Value::List(Rc::new(ExactList::new(vec![Value::Number(2)]))),
+            Value::Number(3),
+            Value::Number(4),
+            Value::List(Rc::new(ExactList::new(vec![])))
+        ])));
+        assert_eq!(format!("{}", a), "[[...], [0, 1], [2], 3, 4, []]");
     }
 }
