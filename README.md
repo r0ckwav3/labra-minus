@@ -53,20 +53,19 @@ Assumes that `()` is a list containing all numbers or all lists.
 0[](()[0][])(()[])
 # A list containing {0, l[0], l}
 (
-  ()[0](1)[]
-  (()[1](()[2][()[0(1)])[])
-  (()[2][])
+    ()[0](1)[]
+    (()[1](()[2][()[0](1)])[])
+    (()[2][])
 ]
 # A list L such that L[i] = {i, sum from l[0] to l[i], l}
 [()()[1]]
 # L[l.size()-1] = {l.size()-1, sum of l, l}
-[2]
+[1]
 # extract sum of l
 ```
 Since we are lazy evaluating the induction operator, it's fine if some of the elements of it are invalid as long as we don't access them (for example computing `L[l.size()]` would access an out-of-bounds element).
 
 ## Todo
- * comment support
  * improve user input
     * string i/o
     * Arbitrary list
