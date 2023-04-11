@@ -1,13 +1,54 @@
+use std::env;
+use std::fs;
+
 mod value;
 mod evaluate;
 mod parsetree;
 
 fn main() {
-    let testexpr = "1(0][()()]";
-    match parsetree::parse(testexpr){
-        Ok(pt) => {println!("{:?}", pt);}
-        Err(e) => {println!("Error: {:?}", e);}
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 2{
+        println!("Please provide an filepath, such as with the command below.\n >> cargo labra-minus -- your/filepath/here.txt");
+        return;
     }
+
+    let filepath = &args[1];
+    let contents;
+    match fs::read_to_string(filepath){
+        Ok(s) => {
+            contents = s;
+        },
+        Err(e) => {
+            println!("could not read file {}: {:?}", filepath, e);
+            return;
+        }
+    }
+
+    // parse
+    let parsedfile;
+    match parsetree::parse(&contents[..]){
+        Ok(pt) => {parsedfile = pt;},
+        Err(e) => {
+            println!("Parseing error: {:?}", e);
+            return;
+        }
+    }
+
+    // TODO: get user input
+    let input = value::Value::Number(0);
+
+    // evaluate
+    let output;
+    match evaluate::evaluate(&parsedfile, &input){
+        Ok(v) => {output = v},
+        Err(e) => {
+            println!("Runtime error: {:?}", e);
+            return;
+        }
+    }
+
+    // output
+    println!("{}", output);
 }
 
 #[cfg(test)]

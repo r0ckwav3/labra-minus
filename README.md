@@ -8,7 +8,11 @@ You may notice that there is no way to define a function in this language, and t
 
 ## Using the interpreter
 
-Currently you have to hardcode something into main.rs.
+Put a file `XXX.txt` in the root directory of the project and run:
+```
+cargo run -- XXX.txt
+```
+There is currently no way to give input to a program.
 
 ## Syntax Overview
 Newlines are ignored, and `#` makes a comment.
