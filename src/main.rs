@@ -34,8 +34,19 @@ fn main() {
         }
     }
 
-    // TODO: get user input
-    let input = value::Value::Number(0);
+    // input
+    let input;
+    if args.len() >= 3{
+        let rawinput = &args[2];
+        if let Ok(n) = rawinput.parse(){
+            input = value::Value::Number(n);
+        }else{
+            input = value::Value::Number(0);
+        }
+    }else{
+        input = value::Value::Number(0);
+    }
+
 
     // evaluate
     let output;

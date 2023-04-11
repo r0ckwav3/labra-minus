@@ -11,8 +11,10 @@ You may notice that there is no way to define a function in this language, and t
 Put a file `XXX.txt` in the root directory of the project and run:
 ```
 cargo run -- XXX.txt
+or
+cargo run -- XXX.txt input
 ```
-There is currently no way to give input to a program.
+Inputs can only be integers at the moment. If no input is given, 0 is the default input.
 
 ## Syntax Overview
 Newlines are ignored, and `#` makes a comment.
@@ -65,8 +67,9 @@ Since we are lazy evaluating the induction operator, it's fine if some of the el
 
 ## Todo
  * comment support
- * allow user input
+ * improve user input
     * string i/o
+    * Arbitrary list
  * Better Error Messages
     * Line/Character numbers
  * Code cleanup
