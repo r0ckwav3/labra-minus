@@ -34,10 +34,31 @@ pub fn parse(expr: &str) -> Result<ParseTree, ParseError> {
 pub fn parse_helper(expr: &str, startindex: usize) -> Result<(Option<ParseTree>, usize), ParseError> {
     let mut ans: Option<ParseTree> = None;
     let mut numberstart = 0;
+    let mut incomment = false;
     let mut innumber = false;
     let mut i = startindex;
     loop {
         if let Some(c) = expr.chars().nth(i) {
+            // Comment handling
+            if c == '#' && !incomment{
+                if innumber {
+                    if let Some(_) = ans{
+                        return Err(ParseError::SyntaxError(format!("Found number not leading expression at char {}", i)));
+                    }
+                    ans = parse_number(expr, numberstart, i)?;
+                    innumber = false;
+                }
+
+                incomment = true;
+            } else if c == '\n' && incomment{
+                incomment = false;
+            }
+
+            if incomment {
+                i+=1;
+                continue;
+            }
+
             // Invalid Chars
             if !char::is_whitespace(c){
                 match c {
@@ -58,20 +79,11 @@ pub fn parse_helper(expr: &str, startindex: usize) -> Result<(Option<ParseTree>,
                 }
                 _ => {
                     if innumber {
-                        if let Some(numberstr) = expr.get(numberstart..i) {
-                            if let Ok(n) = i64::from_str(numberstr) {
-                                if let None = ans{
-                                    ans = Some(ParseTree::Number(n));
-                                    innumber = false;
-                                } else {
-                                    return Err(ParseError::SyntaxError(format!("Found number not leading expression at char {}", i)));
-                                }
-                            } else {
-                                return Err(ParseError::NumberParseError);
-                            }
-                        } else {
-                            return Err(ParseError::UnexpectedEOF);
+                        if let Some(_) = ans{
+                            return Err(ParseError::SyntaxError(format!("Found number not leading expression at char {}", i)));
                         }
+                        ans = parse_number(expr, numberstart, i)?;
+                        innumber = false;
                     }
                 }
             }
@@ -121,24 +133,27 @@ pub fn parse_helper(expr: &str, startindex: usize) -> Result<(Option<ParseTree>,
         } else {
             // the other return case doesn't need this because the non-digit check already catches it
             if innumber {
-                if let Some(numberstr) = expr.get(numberstart..i) {
-                    if let Ok(n) = i64::from_str(numberstr) {
-                        if let None = ans{
-                            ans = Some(ParseTree::Number(n));
-                        } else {
-                            return Err(ParseError::SyntaxError(format!("Found number not leading expression at char {}", i)));
-                        }
-                    } else {
-                        return Err(ParseError::NumberParseError);
-                    }
-                } else {
-                    return Err(ParseError::UnexpectedEOF);
+                if let Some(_) = ans{
+                        return Err(ParseError::SyntaxError(format!("Found number not leading expression at char {}", i)));
                 }
+                ans = parse_number(expr, numberstart, i)?;
             }
 
             return Ok((ans, i));
         }
         i+=1;
+    }
+}
+
+fn parse_number(expr: &str, start: usize, end: usize) -> Result<Option<ParseTree>, ParseError>{
+    if let Some(numberstr) = expr.get(start..end) {
+        if let Ok(n) = i64::from_str(numberstr) {
+            Ok(Some(ParseTree::Number(n)))
+        } else {
+            Err(ParseError::NumberParseError)
+        }
+    } else {
+        Err(ParseError::UnexpectedEOF)
     }
 }
 
@@ -183,5 +198,15 @@ mod tests {
         assert_eq!(a, ParseTree::Number(0));
         let a = parse(" [ \t \n ] \t").expect("failed to parse");
         assert_eq!(a, ParseTree::EmptyList);
+    }
+
+    #[test]
+    fn comment_test() {
+        let a = parse("0#[]").expect("failed to parse");
+        assert_eq!(a, ParseTree::Number(0));
+        let a = parse("(#[]\n)").expect("failed to parse");
+        assert_eq!(a, ParseTree::Input);
+        let a = parse("123#456").expect("failed to parse");
+        assert_eq!(a, ParseTree::Number(123));
     }
 }
