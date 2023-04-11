@@ -68,3 +68,4 @@ Since we are lazy evaluating the induction operator, it's fine if some of the el
     * Line/Character numbers
  * Code cleanup
    * Import organization
+ * Try converting Box pointers to normal pointers
