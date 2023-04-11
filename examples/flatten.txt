@@ -1,0 +1,18 @@
+# create a list of lists
+0[](1[])[](2[](3[])[])(4[](5[])[])
+(
+# We input some list l
+0[](()[0][])(()[])
+# A list containing {0, l[0], l}
+(
+    ()[0](1)[]
+    (()[1](()[2][()[0](1)])[])
+    (()[2][])
+]
+# A list L such that L[i] = {i, sum from l[0] to l[i], l}
+[()()[1]]
+# L[l.size()-1] = {l.size()-1, sum of l, l}
+[1]
+# extract sum of l
+][1]
+# call our function

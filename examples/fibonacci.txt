@@ -1,0 +1,15 @@
+# fibonacci.txt
+# given an input n, computes the nth fibonacci number
+
+# We'll use the induction operator to generate a list (F_n, F_{n+1})
+0[](1[])
+(
+    ()[1][]
+    (
+        ()[0](()[1])[]
+    )
+]
+[()]
+# get the nth pair
+[0]
+# get F_n
