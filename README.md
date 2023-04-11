@@ -64,7 +64,6 @@ Assumes that `()` is a list containing all numbers or all lists.
 Since we are lazy evaluating the induction operator, it's fine if some of the elements of it are invalid as long as we don't access them (for example computing `L[l.size()]` would access an out-of-bounds element).
 
 ## Todo
- * CLI / file input
  * comment support
  * allow user input
     * string i/o
