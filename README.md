@@ -61,7 +61,6 @@ Since we are lazy evaluating the induction operator, it's fine if some of the el
 
 ## Todo
  * CLI / file input
- * newline support
  * comment support
  * allow user input
     * string i/o
