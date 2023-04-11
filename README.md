@@ -66,3 +66,5 @@ Since we are lazy evaluating the induction operator, it's fine if some of the el
     * string i/o
  * Better Error Messages
     * Line/Character numbers
+ * Code cleanup
+   * Import organization
