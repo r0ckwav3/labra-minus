@@ -39,10 +39,12 @@ pub fn parse_helper(expr: &str, startindex: usize) -> Result<(Option<ParseTree>,
     loop {
         if let Some(c) = expr.chars().nth(i) {
             // Invalid Chars
-            match c {
-                '0'..='9'|' '|'('|')'|'['|']' => (),
-                _ => {
-                    return Err(ParseError::InvalidCharacter(format!("found invalid character {}", c)));
+            if !char::is_whitespace(c){
+                match c {
+                    '0'..='9'|'('|')'|'['|']' => (),
+                    _ => {
+                        return Err(ParseError::InvalidCharacter(format!("found invalid character {}", c)));
+                    }
                 }
             }
 
@@ -173,5 +175,13 @@ mod tests {
         assert_eq!(a, ParseTree::Induction(Box::new(ParseTree::Number(0)), Box::new(ParseTree::Number(0))));
         let a = parse("0[0)").expect("failed to parse");
         assert_eq!(a, ParseTree::Map(Box::new(ParseTree::Number(0)), Box::new(ParseTree::Number(0))));
+    }
+
+    #[test]
+    fn whitespace_test() {
+        let a = parse(" \t\n0\t\n ").expect("failed to parse");
+        assert_eq!(a, ParseTree::Number(0));
+        let a = parse(" [ \t \n ] \t").expect("failed to parse");
+        assert_eq!(a, ParseTree::EmptyList);
     }
 }
