@@ -1,13 +1,8 @@
 use std::rc::Rc;
 
-use crate::value::LazyConcatList;
-use crate::value::LazyInductionList;
-use crate::value::LazyMapList;
-
 use super::parsetree::ParseTree;
 use super::value;
-use super::value::RuntimeError;
-use super::value::Value;
+use super::value::{LazyConcatList, LazyInductionList, LazyMapList, RuntimeError, Value};
 
 pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeError> {
     match expression {
