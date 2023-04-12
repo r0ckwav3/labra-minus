@@ -1,4 +1,7 @@
 # toUpper.txt
+# by: Peter Vandervelde (r0ckwav3)
+# written for labra-minus
+
 # Given an input string, convert all lowercase letters to uppercase letters
 # Lowercase letters are 97 - 122
 # Uppercase letters are 65 - 90

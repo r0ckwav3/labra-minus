@@ -1,3 +1,9 @@
+# flatten.txt
+# by: Peter Vandervelde (r0ckwav3)
+# written for labra-minus
+
+# Takes a list of lists and flattens it into a list containing the contents of all of the elements
+
 # create a list of lists
 0[](1[])[](2[](3[])[])(4[](5[])[])
 (
