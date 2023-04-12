@@ -14,7 +14,9 @@ cargo run -- XXX.txt
 or
 cargo run -- XXX.txt input
 ```
-Inputs can only be integers at the moment. If no input is given, 0 is the default input.
+Inputs be integers or strings. Strings are translated into a list of the unicode values. If no input is given, 0 is the default input.
+
+If the output can be interpreted as a string (a list of valid unicode codes), both the list and the translated string will be outputted.
 
 ## Syntax Overview
 Newlines are ignored, and `#` makes a comment.
