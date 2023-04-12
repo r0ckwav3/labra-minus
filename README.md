@@ -39,6 +39,9 @@ X[Y)  Map            - Returns {Y(X[0]), Y(X[1]), ...}.
 ```
 
 ## Example Code
+
+More examples can be found in `/examples`.
+
 #### Test for equality to 0
 Returns 1 if input is 0 (or length 0), 0 otherwise.
 
@@ -70,8 +73,6 @@ Since we are lazy evaluating the induction operator, it's fine if some of the el
     * Arbitrary list
  * Better Error Messages
     * Line/Character numbers
- * Code cleanup
-   * Import organization
  * Try converting Box pointers to normal pointers
  * Make a lazy version of exact lists which encapsulate uses
  * Make map resolve list into exact sometimes
