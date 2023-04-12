@@ -74,3 +74,5 @@ Since we are lazy evaluating the induction operator, it's fine if some of the el
  * Code cleanup
    * Import organization
  * Try converting Box pointers to normal pointers
+ * Make a lazy version of exact lists which encapsulate uses
+ * Make map resolve list into exact sometimes
