@@ -19,7 +19,7 @@ impl fmt::Display for Value{
                     write!(f, "[").and_then(|_| {
                         let mut finalresult = Ok(());
                         for i in 0..len{
-                            finalresult = finalresult.or(
+                            finalresult = finalresult.and(
                                 match ll.index(i){
                                     Ok(v) => v.fmt(f),
                                     Err(_) => Err(fmt::Error)
@@ -260,5 +260,25 @@ mod tests {
             Value::List(Rc::new(ExactList::new(vec![])))
         ])));
         assert_eq!(format!("{}", a), "[[...], [0, 1], [2], 3, 4, []]");
+    }
+
+    #[test]
+    #[should_panic]
+    fn invalid_format_test(){
+        let a = Value::List(Rc::new(LazyMapList::new(
+            ParseTree::Addition(Box::new(ParseTree::Input), Box::new(ParseTree::EmptyList)),
+            Rc::new(ExactList::new(vec![Value::Number(0), Value::Number(1)]))
+        )));
+
+        format!("{}", a);
+    }
+
+    #[test]
+    fn map_error_test(){
+        let a = LazyMapList::new(
+            ParseTree::Addition(Box::new(ParseTree::Input), Box::new(ParseTree::EmptyList)),
+            Rc::new(ExactList::new(vec![Value::Number(0), Value::Number(1)]))
+        );
+        assert!(a.index(0).is_err());
     }
 }

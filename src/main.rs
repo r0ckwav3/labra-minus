@@ -202,6 +202,21 @@ mod tests {
     }
 
     #[test]
+    fn compound_invalid_operation_test(){
+        // invalid map
+        let expr = "0[0)";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0));
+        assert!(result.is_err());
+
+        // invalid operation inside a map
+        let expr = "0[][()([]))[0]";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0));
+        assert!(result.is_err());
+    }
+
+    #[test]
     #[ignore]
     fn flatten_test(){
         /*
