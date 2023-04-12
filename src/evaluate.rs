@@ -153,5 +153,32 @@ mod tests {
             panic!("Bad return type");
         }
     }
+
+    #[test]
+    fn invalid_operation_test() {
+        let mut result = evaluate(
+            &ParseTree::Addition(Box::new(ParseTree::Number(4)), Box::new(ParseTree::EmptyList)),
+            &Value::Number(0)
+        );
+        assert!(result.is_err());
+
+        result = evaluate(
+            &ParseTree::Addition(Box::new(ParseTree::EmptyList), Box::new(ParseTree::Number(4))),
+            &Value::Number(0)
+        );
+        assert!(result.is_err());
+
+        result = evaluate(
+            &ParseTree::IndexSubtraction(Box::new(ParseTree::Number(4)), Box::new(ParseTree::EmptyList)),
+            &Value::Number(0)
+        );
+        assert!(result.is_err());
+
+        result = evaluate(
+            &ParseTree::IndexSubtraction(Box::new(ParseTree::EmptyList), Box::new(ParseTree::Number(4))),
+            &Value::Number(0)
+        );
+        assert!(result.is_err());
+    }
     // tests for more complicated operations will use parse, and thus will be in main
 }

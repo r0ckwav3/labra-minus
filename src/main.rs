@@ -4,6 +4,7 @@ use std::fs;
 mod value;
 mod evaluate;
 mod parsetree;
+mod string;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -40,6 +41,8 @@ fn main() {
         let rawinput = &args[2];
         if let Ok(n) = rawinput.parse(){
             input = value::Value::Number(n);
+        }else if let Ok(l) = string::string_to_list(rawinput){
+            input = l;
         }else{
             input = value::Value::Number(0);
         }
@@ -60,6 +63,9 @@ fn main() {
 
     // output
     println!("{}", output);
+    if let Ok(s) = string::list_to_string(&output){
+        println!("{}", s)
+    }
 }
 
 #[cfg(test)]
@@ -193,6 +199,21 @@ mod tests {
         }else{
             panic!("Bad return type");
         }
+    }
+
+    #[test]
+    fn compound_invalid_operation_test(){
+        // invalid map
+        let expr = "0[0)";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0));
+        assert!(result.is_err());
+
+        // invalid operation inside a map
+        let expr = "0[][()([]))[0]";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0));
+        assert!(result.is_err());
     }
 
     #[test]
