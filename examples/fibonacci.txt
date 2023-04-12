@@ -1,4 +1,7 @@
 # fibonacci.txt
+# by: Peter Vandervelde (r0ckwav3)
+# written for labra-minus
+
 # given an input n, computes the nth fibonacci number
 
 # We'll use the induction operator to generate a list (F_n, F_{n+1})

@@ -1,1 +1,7 @@
+# isZero.txt
+# by: Peter Vandervelde (r0ckwav3)
+# written for labra-minus
+
+# returns 1 if 0 (or a list of length 0) is given, and returns 0 for any other input
+
 1(0][()()]
