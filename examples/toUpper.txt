@@ -1,0 +1,29 @@
+# toUpper.txt
+# Given an input string, convert all lowercase letters to uppercase letters
+# Lowercase letters are 97 - 122
+# Uppercase letters are 65 - 90
+
+# Get Input
+()
+# Map every character to pair (char, char > 96, char <= 122)
+[
+    ()[](
+        0(1][()[96](()[96]())][] # check if ()-96 is negative by seeing if x + |x| != 0
+    )(
+        1(0][()[122](()[122]())][] # check if ()-122 is non-positive by seeing if x + |x| = 0
+    )
+)
+# and those last two elements
+[
+    ()[0][](
+        # construct a list [0, input[1]] and index into it by input[2]
+        0[](()[1][])[()[2]][]
+    )
+)
+# subtract 32 if the second one is 1
+[
+    ()[0][
+        # construct a list [0, 32] and index into it by input[1]
+        0[](32[])[()[1]]
+    ]
+)
