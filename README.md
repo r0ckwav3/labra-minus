@@ -67,7 +67,6 @@ Since we are lazy evaluating the induction operator, it's fine if some of the el
 
 ## Todo
  * improve user input
-    * string i/o
     * Arbitrary list
  * Better Error Messages
     * Line/Character numbers
