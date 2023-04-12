@@ -1,24 +1,24 @@
 use std::env;
 use std::fs;
 
-mod value;
 mod evaluate;
 mod parsetree;
 mod string;
+mod value;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.len() < 2{
+    if args.len() < 2 {
         println!("Please provide an filepath, such as with the command below.\n >> cargo labra-minus -- your/filepath/here.txt");
         return;
     }
 
     let filepath = &args[1];
     let contents;
-    match fs::read_to_string(filepath){
+    match fs::read_to_string(filepath) {
         Ok(s) => {
             contents = s;
-        },
+        }
         Err(e) => {
             println!("could not read file {}: {:?}", filepath, e);
             return;
@@ -27,8 +27,10 @@ fn main() {
 
     // parse
     let parsedfile;
-    match parsetree::parse(&contents[..]){
-        Ok(pt) => {parsedfile = pt;},
+    match parsetree::parse(&contents[..]) {
+        Ok(pt) => {
+            parsedfile = pt;
+        }
         Err(e) => {
             println!("Parseing error: {:?}", e);
             return;
@@ -37,24 +39,23 @@ fn main() {
 
     // input
     let input;
-    if args.len() >= 3{
+    if args.len() >= 3 {
         let rawinput = &args[2];
-        if let Ok(n) = rawinput.parse(){
+        if let Ok(n) = rawinput.parse() {
             input = value::Value::Number(n);
-        }else if let Ok(l) = string::string_to_list(rawinput){
+        } else if let Ok(l) = string::string_to_list(rawinput) {
             input = l;
-        }else{
+        } else {
             input = value::Value::Number(0);
         }
-    }else{
+    } else {
         input = value::Value::Number(0);
     }
 
-
     // evaluate
     let output;
-    match evaluate::evaluate(&parsedfile, &input){
-        Ok(v) => {output = v},
+    match evaluate::evaluate(&parsedfile, &input) {
+        Ok(v) => output = v,
         Err(e) => {
             println!("Runtime error: {:?}", e);
             return;
@@ -63,7 +64,7 @@ fn main() {
 
     // output
     println!("{}", output);
-    if let Ok(s) = string::list_to_string(&output){
+    if let Ok(s) = string::list_to_string(&output) {
         println!("{}", s)
     }
 }
@@ -77,9 +78,9 @@ mod tests {
         let expr = "1(2)(6)";
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::Number(n) = result{
+        if let value::Value::Number(n) = result {
             assert_eq!(n, 9);
-        }else{
+        } else {
             panic!("Bad return type");
         }
     }
@@ -90,18 +91,18 @@ mod tests {
         // should return [2,3,[]]
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::List(l) = result{
+        if let value::Value::List(l) = result {
             let len = l.length().expect("indexing failure");
             assert_eq!(len, 3);
-            match l.index(0).expect("indexing failure"){
+            match l.index(0).expect("indexing failure") {
                 value::Value::Number(n) => assert_eq!(n, 2),
-                _ => panic!("bad return type")
+                _ => panic!("bad return type"),
             }
-            match l.index(1).expect("indexing failure"){
+            match l.index(1).expect("indexing failure") {
                 value::Value::Number(n) => assert_eq!(n, 3),
-                _ => panic!("bad return type")
+                _ => panic!("bad return type"),
             }
-        }else{
+        } else {
             panic!("Bad return type");
         }
     }
@@ -111,9 +112,9 @@ mod tests {
         let expr = "1(2)[5]";
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::Number(n) = result{
+        if let value::Value::Number(n) = result {
             assert_eq!(n, -2);
-        }else{
+        } else {
             panic!("Bad return type");
         }
     }
@@ -124,9 +125,9 @@ mod tests {
         // [2,3,[4,5]] [2] [0]
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::Number(n) = result{
+        if let value::Value::Number(n) = result {
             assert_eq!(n, 4);
-        }else{
+        } else {
             panic!("Bad return type");
         }
     }
@@ -136,9 +137,9 @@ mod tests {
         let expr = "1(0][5]";
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::Number(n) = result{
+        if let value::Value::Number(n) = result {
             assert_eq!(n, 0);
-        }else{
+        } else {
             panic!("Bad return type");
         }
     }
@@ -148,9 +149,9 @@ mod tests {
         let expr = "1(0][0]";
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::Number(n) = result{
+        if let value::Value::Number(n) = result {
             assert_eq!(n, 1);
-        }else{
+        } else {
             panic!("Bad return type");
         }
     }
@@ -160,9 +161,9 @@ mod tests {
         let expr = "2(()(1)][5]";
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::Number(n) = result{
+        if let value::Value::Number(n) = result {
             assert_eq!(n, 7);
-        }else{
+        } else {
             panic!("Bad return type");
         }
     }
@@ -172,19 +173,18 @@ mod tests {
         let expr = "2[](3[][])[0)()";
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::Number(n) = result{
+        if let value::Value::Number(n) = result {
             assert_eq!(n, 2);
-        }else{
+        } else {
             panic!("Bad return type");
         }
-
 
         let expr = "2[](3[][])[0)[1]";
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::Number(n) = result{
+        if let value::Value::Number(n) = result {
             assert_eq!(n, 0);
-        }else{
+        } else {
             panic!("Bad return type");
         }
     }
@@ -194,15 +194,15 @@ mod tests {
         let expr = "2[](3[])(5[])[()(()))[1]";
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::Number(n) = result{
+        if let value::Value::Number(n) = result {
             assert_eq!(n, 6);
-        }else{
+        } else {
             panic!("Bad return type");
         }
     }
 
     #[test]
-    fn compound_invalid_operation_test(){
+    fn compound_invalid_operation_test() {
         // invalid map
         let expr = "0[0)";
         let pt = parsetree::parse(expr).expect("parse error");
@@ -218,7 +218,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn flatten_test(){
+    fn flatten_test() {
         /*
         # create a list of lists
         0[](1[])[](2[](3[])[])(4[](5[])[])
@@ -243,18 +243,18 @@ mod tests {
         // output should be [0,1,2,3,4,5]
         let pt = parsetree::parse(expr).expect("parse error");
         let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
-        if let value::Value::List(l) = result{
+        if let value::Value::List(l) = result {
             let len = l.length().expect("indexing failure");
             assert_eq!(len, 6);
-            match l.index(0).expect("indexing failure"){
+            match l.index(0).expect("indexing failure") {
                 value::Value::Number(n) => assert_eq!(n, 0),
-                _ => panic!("bad return type")
+                _ => panic!("bad return type"),
             }
-            match l.index(4).expect("indexing failure"){
+            match l.index(4).expect("indexing failure") {
                 value::Value::Number(n) => assert_eq!(n, 4),
-                _ => panic!("bad return type")
+                _ => panic!("bad return type"),
             }
-        }else{
+        } else {
             panic!("Bad return type");
         }
     }
