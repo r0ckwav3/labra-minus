@@ -2,22 +2,22 @@ use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ParseTree {
-    Number(i64),
-    Input,
-    EmptyList,
-    Length(Box<ParseTree>),
-    Encapsulate(Box<ParseTree>),
-    Addition(Box<ParseTree>, Box<ParseTree>),
-    IndexSubtraction(Box<ParseTree>, Box<ParseTree>),
-    Induction(Box<ParseTree>, Box<ParseTree>),
-    Map(Box<ParseTree>, Box<ParseTree>),
+    Number{n: i64, line: u32},
+    Input{line: u32},
+    EmptyList{line: u32},
+    Length{arg: Box<ParseTree>, line: u32},
+    Encapsulate{arg: Box<ParseTree>, line: u32},
+    Addition{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
+    IndexSubtraction{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
+    Induction{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
+    Map{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
 }
 
 #[derive(Debug)]
 pub enum ParseError {
     InvalidCharacter(String),
     UnexpectedEOF,
-    NumberParseError,
+    NumberParseError(String),
     SyntaxError(String),
     EmptyFile,
 }
@@ -40,6 +40,7 @@ pub fn parse_helper(
     let mut incomment = false;
     let mut innumber = false;
     let mut i = startindex;
+    let mut linenum = 1;
     loop {
         if let Some(c) = expr.chars().nth(i) {
             // Comment handling
@@ -47,11 +48,12 @@ pub fn parse_helper(
                 if innumber {
                     if let Some(_) = ans {
                         return Err(ParseError::SyntaxError(format!(
-                            "Found number not leading expression at char {}",
-                            i
+                            "Found number not leading expression at char {} (line {})",
+                            i,
+                            linenum
                         )));
                     }
-                    ans = parse_number(expr, numberstart, i)?;
+                    ans = parse_number(expr, numberstart, i, linenum)?;
                     innumber = false;
                 }
 
@@ -65,14 +67,19 @@ pub fn parse_helper(
                 continue;
             }
 
+            // line numbers:
+            if c == '\n'{
+                linenum+=1;
+            }
+
             // Invalid Chars
             if !char::is_whitespace(c) {
                 match c {
                     '0'..='9' | '(' | ')' | '[' | ']' => (),
                     _ => {
                         return Err(ParseError::InvalidCharacter(format!(
-                            "found invalid character {}",
-                            c
+                            "found invalid character {} at character {} (line {})",
+                            c, i, linenum
                         )));
                     }
                 }
@@ -90,11 +97,12 @@ pub fn parse_helper(
                     if innumber {
                         if let Some(_) = ans {
                             return Err(ParseError::SyntaxError(format!(
-                                "Found number not leading expression at char {}",
-                                i
+                                "Found number not leading expression at char {} (line {})",
+                                i,
+                                linenum
                             )));
                         }
-                        ans = parse_number(expr, numberstart, i)?;
+                        ans = parse_number(expr, numberstart, i, linenum)?;
                         innumber = false;
                     }
                 }
@@ -107,35 +115,36 @@ pub fn parse_helper(
                     if let Some(endchar) = expr.chars().nth(bracketend) {
                         ans = match ans {
                             None => match (c, endchar, rec) {
-                                ('(', ')', None) => Some(ParseTree::Input),
-                                ('[', ']', None) => Some(ParseTree::EmptyList),
+                                ('(', ')', None) => Some(ParseTree::Input{line: linenum}),
+                                ('[', ']', None) => Some(ParseTree::EmptyList{line: linenum}),
                                 _ => {
                                     return Err(ParseError::SyntaxError(format!(
-                                        "Invalid expression with no predecessor: {}",
-                                        expr.get(..).expect("error in creating error message")
+                                        "Invalid expression with no predecessor: \"{}\" at line {}",
+                                        expr.get(..).expect("error in creating error message"),
+                                        linenum
                                     )));
                                 }
                             },
                             Some(prevpt) => match (c, endchar, rec) {
-                                ('(', ')', None) => Some(ParseTree::Length(Box::new(prevpt))),
-                                ('[', ']', None) => Some(ParseTree::Encapsulate(Box::new(prevpt))),
-                                ('(', ')', Some(pt)) => {
-                                    Some(ParseTree::Addition(Box::new(prevpt), Box::new(pt)))
-                                }
-                                ('[', ']', Some(pt)) => Some(ParseTree::IndexSubtraction(
-                                    Box::new(prevpt),
-                                    Box::new(pt),
-                                )),
-                                ('(', ']', Some(pt)) => {
-                                    Some(ParseTree::Induction(Box::new(prevpt), Box::new(pt)))
-                                }
-                                ('[', ')', Some(pt)) => {
-                                    Some(ParseTree::Map(Box::new(prevpt), Box::new(pt)))
-                                }
+                                ('(', ')', None) => Some(ParseTree::Length{
+                                    arg: Box::new(prevpt),
+                                    line: linenum}),
+                                ('[', ']', None) => Some(ParseTree::Encapsulate{
+                                    arg: Box::new(prevpt),
+                                    line: linenum}),
+                                ('(', ')', Some(pt)) => Some(ParseTree::Addition{
+                                        arg1: Box::new(prevpt), arg2: Box::new(pt), line: linenum}),
+                                ('[', ']', Some(pt)) => Some(ParseTree::IndexSubtraction{
+                                        arg1: Box::new(prevpt), arg2: Box::new(pt), line: linenum}),
+                                ('(', ']', Some(pt)) => Some(ParseTree::Induction{
+                                        arg1: Box::new(prevpt), arg2: Box::new(pt), line: linenum}),
+                                ('[', ')', Some(pt)) => Some(ParseTree::Map{
+                                        arg1: Box::new(prevpt), arg2: Box::new(pt), line: linenum}),
                                 _ => {
                                     return Err(ParseError::SyntaxError(format!(
-                                        "Invalid expression: {}",
-                                        expr.get(..).expect("error in creating error message")
+                                        "Invalid expression \"{}\" at line {}",
+                                        expr.get(..).expect("error in creating error message"),
+                                        linenum
                                     )));
                                 }
                             },
@@ -157,11 +166,12 @@ pub fn parse_helper(
             if innumber {
                 if let Some(_) = ans {
                     return Err(ParseError::SyntaxError(format!(
-                        "Found number not leading expression at char {}",
-                        i
+                        "Found number not leading expression at char {} (line {})",
+                        i,
+                        linenum
                     )));
                 }
-                ans = parse_number(expr, numberstart, i)?;
+                ans = parse_number(expr, numberstart, i, linenum)?;
             }
 
             return Ok((ans, i));
@@ -170,12 +180,14 @@ pub fn parse_helper(
     }
 }
 
-fn parse_number(expr: &str, start: usize, end: usize) -> Result<Option<ParseTree>, ParseError> {
+fn parse_number(expr: &str, start: usize, end: usize, linenum: u32) -> Result<Option<ParseTree>, ParseError> {
     if let Some(numberstr) = expr.get(start..end) {
         if let Ok(n) = i64::from_str(numberstr) {
-            Ok(Some(ParseTree::Number(n)))
+            Ok(Some(ParseTree::Number{n, line: linenum}))
         } else {
-            Err(ParseError::NumberParseError)
+            Err(ParseError::NumberParseError(format!(
+                "Failed to parse number at char {} (line {})", start, linenum
+            )))
         }
     } else {
         Err(ParseError::UnexpectedEOF)
@@ -189,19 +201,19 @@ mod tests {
     #[test]
     fn nonary_operations() {
         let a = parse("0").expect("failed to parse");
-        assert_eq!(a, ParseTree::Number(0));
+        assert_eq!(a, ParseTree::Number{n: 0, line: 1});
         let a = parse("()").expect("failed to parse");
-        assert_eq!(a, ParseTree::Input);
+        assert_eq!(a, ParseTree::Input{line: 1});
         let a = parse("[]").expect("failed to parse");
-        assert_eq!(a, ParseTree::EmptyList);
+        assert_eq!(a, ParseTree::EmptyList{line: 1});
     }
 
     #[test]
     fn unary_operations() {
         let a = parse("0()").expect("failed to parse");
-        assert_eq!(a, ParseTree::Length(Box::new(ParseTree::Number(0))));
+        assert_eq!(a, ParseTree::Length{arg: Box::new(ParseTree::Number{n:0, line: 1}), line: 1});
         let a = parse("0[]").expect("failed to parse");
-        assert_eq!(a, ParseTree::Encapsulate(Box::new(ParseTree::Number(0))));
+        assert_eq!(a, ParseTree::Encapsulate{arg: Box::new(ParseTree::Number{n:0, line: 1}), line: 1});
     }
 
     #[test]
@@ -209,52 +221,62 @@ mod tests {
         let a = parse("0(0)").expect("failed to parse");
         assert_eq!(
             a,
-            ParseTree::Addition(
-                Box::new(ParseTree::Number(0)),
-                Box::new(ParseTree::Number(0))
-            )
+            ParseTree::Addition{
+                arg1: Box::new(ParseTree::Number{n:0, line: 1}),
+                arg2: Box::new(ParseTree::Number{n:0, line: 1}),
+                line: 1
+            }
         );
         let a = parse("0[0]").expect("failed to parse");
         assert_eq!(
             a,
-            ParseTree::IndexSubtraction(
-                Box::new(ParseTree::Number(0)),
-                Box::new(ParseTree::Number(0))
-            )
+            ParseTree::IndexSubtraction{
+                arg1: Box::new(ParseTree::Number{n:0, line: 1}),
+                arg2: Box::new(ParseTree::Number{n:0, line: 1}),
+                line: 1
+            }
         );
         let a = parse("0(0]").expect("failed to parse");
         assert_eq!(
             a,
-            ParseTree::Induction(
-                Box::new(ParseTree::Number(0)),
-                Box::new(ParseTree::Number(0))
-            )
+            ParseTree::Induction{
+                arg1: Box::new(ParseTree::Number{n:0, line: 1}),
+                arg2: Box::new(ParseTree::Number{n:0, line: 1}),
+                line: 1
+            }
         );
         let a = parse("0[0)").expect("failed to parse");
         assert_eq!(
             a,
-            ParseTree::Map(
-                Box::new(ParseTree::Number(0)),
-                Box::new(ParseTree::Number(0))
-            )
+            ParseTree::Map{
+                arg1: Box::new(ParseTree::Number{n:0, line: 1}),
+                arg2: Box::new(ParseTree::Number{n:0, line: 1}),
+                line: 1
+            }
         );
     }
 
     #[test]
     fn whitespace_test() {
         let a = parse(" \t\n0\t\n ").expect("failed to parse");
-        assert_eq!(a, ParseTree::Number(0));
+        assert_eq!(a, ParseTree::Number{n:0, line: 2});
         let a = parse(" [ \t \n ] \t").expect("failed to parse");
-        assert_eq!(a, ParseTree::EmptyList);
+        assert_eq!(a, ParseTree::EmptyList{line: 1});
     }
 
     #[test]
     fn comment_test() {
         let a = parse("0#[]").expect("failed to parse");
-        assert_eq!(a, ParseTree::Number(0));
+        assert_eq!(a, ParseTree::Number{n:0, line: 1});
         let a = parse("(#[]\n)").expect("failed to parse");
-        assert_eq!(a, ParseTree::Input);
+        assert_eq!(a, ParseTree::Input{line: 1});
         let a = parse("123#456").expect("failed to parse");
-        assert_eq!(a, ParseTree::Number(123));
+        assert_eq!(a, ParseTree::Number{n:123, line: 1});
+    }
+
+    #[test]
+    fn line_number_test() {
+        let a = parse("\n#\n0").expect("failed to parse");
+        assert_eq!(a, ParseTree::Number{n:0, line: 3});
     }
 }
