@@ -14,7 +14,9 @@ cargo run -- XXX.txt
 or
 cargo run -- XXX.txt input
 ```
-Inputs can only be integers at the moment. If no input is given, 0 is the default input.
+Inputs be integers or strings. Strings are translated into a list of the unicode values. If no input is given, 0 is the default input.
+
+If the output can be interpreted as a string (a list of valid unicode codes), both the list and the translated string will be outputted.
 
 ## Syntax Overview
 Newlines are ignored, and `#` makes a comment.
@@ -74,4 +76,8 @@ Since we are lazy evaluating the induction operator, it's fine if some of the el
  * Better Error Messages
     * Line/Character numbers
  * Make a lazy version of exact lists which encapsulate uses
+   * Basically this is because I use 2 element lists for if statements and stuff, which completely ignore one of the elements.
  * Make map resolve list into exact sometimes
+   * A more reasonable idea is to have the map store the results which it's already evaluated. 
+ * I could do both of these by making a list type where each element is an expression + input or just value
+   * I can't map infinite lists this way
