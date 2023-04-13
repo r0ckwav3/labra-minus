@@ -73,6 +73,5 @@ Since we are lazy evaluating the induction operator, it's fine if some of the el
     * Arbitrary list
  * Better Error Messages
     * Line/Character numbers
- * Try converting Box pointers to normal pointers
  * Make a lazy version of exact lists which encapsulate uses
  * Make map resolve list into exact sometimes
