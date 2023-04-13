@@ -74,6 +74,7 @@ pub struct LazyInductionList {
 pub struct LazyMapList {
     function: ParseTree,
     source: Rc<dyn ListLike>,
+    resolved: RefCell<Vec<Option<Value>>>,
 }
 
 pub struct LazyConcatList {
@@ -139,15 +140,30 @@ impl LazyMapList {
         LazyMapList {
             function: f,
             source: s,
+            resolved: RefCell::new(Vec::new())
         }
     }
 }
 
 impl ListLike for LazyMapList {
     fn index(&self, i: usize) -> Result<Value, RuntimeError> {
-        self.source
-            .index(i)
-            .and_then(|v| evaluate::evaluate(&self.function, &v))
+        let mut resolved = self.resolved.borrow_mut();
+        while resolved.len() <= i{
+            resolved.push(None);
+        }
+
+        Ok(
+            match &resolved[i] {
+                None => {
+                    let ans = self.source
+                            .index(i)
+                            .and_then(|v| evaluate::evaluate(&self.function, &v))?;
+                    resolved[i] = Some(ans.clone());
+                    ans
+                }
+                Some(ans) => ans.clone()
+            }
+        )
     }
 
     fn length(&self) -> Result<usize, RuntimeError> {
