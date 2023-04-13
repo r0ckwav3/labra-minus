@@ -9,44 +9,50 @@ pub enum Value {
     List(Rc<dyn ListLike>),
 }
 
+impl Value {
+    fn to_string(&self) -> Result<String, RuntimeError>{
+        let mut s = String::new();
+        self.to_string_helper(&mut s)?;
+        Ok(s)
+    }
+    fn to_string_helper(&self, s: &mut String) -> Result<(), RuntimeError>{
+        match self {
+            Value::Number(n) => s.push_str(&format!("{}", n)[..]),
+            Value::List(ll) => match ll.length() {
+                Err(RuntimeError::ResolvingInfiniteList(_)) => s.push_str("[...]"),
+                Ok(len) => {
+                    s.push('[');
+                    for i in 0..len {
+                        ll.index(i)?.to_string_helper(s);
+                        if i < len - 1 {
+                            s.push(',');
+                            s.push(' ');
+                        }
+                    }
+                    s.push(']');
+                }
+                Err(e) => return Err(e)
+            },
+        };
+        Ok(())
+    }
+}
+
+// this way of doing display is slightly scuffed, but it makes error handling easier
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Value::Number(n) => write!(f, "{}", n),
-            Value::List(ll) => match ll.length() {
-                Err(RuntimeError::ResolvingInfiniteList) => write!(f, "[...]"),
-                Ok(len) => write!(f, "[")
-                    .and_then(|_| {
-                        let mut finalresult = Ok(());
-                        for i in 0..len {
-                            finalresult = finalresult.and(
-                                match ll.index(i) {
-                                    Ok(v) => v.fmt(f),
-                                    Err(_) => Err(fmt::Error),
-                                }
-                                .and_then(|_| {
-                                    if i < len - 1 {
-                                        write!(f, ", ")
-                                    } else {
-                                        Ok(())
-                                    }
-                                }),
-                            )
-                        }
-                        finalresult
-                    })
-                    .and_then(|_| write!(f, "]")),
-                _ => Err(fmt::Error),
-            },
+        match self.to_string(){
+            Ok(s) => write!(f, "{}", s),
+            Err(e) => write!(f, "{:?}", e)
         }
     }
 }
 
 #[derive(Debug)]
 pub enum RuntimeError {
-    OutOfBounds,
-    ResolvingInfiniteList,
-    MismatchedTypes,
+    OutOfBounds(String),
+    ResolvingInfiniteList(String),
+    MismatchedTypes(String),
     NegativeIndex(String),
 }
 
@@ -85,7 +91,11 @@ impl ExactList {
 impl ListLike for ExactList {
     fn index(&self, i: usize) -> Result<Value, RuntimeError> {
         if i >= self.contents.len() {
-            Err(RuntimeError::OutOfBounds)
+            Err(RuntimeError::OutOfBounds(format!(
+                "Attempted to access index {} of list of length {}",
+                i,
+                self.contents.len()
+            )))
         } else {
             Ok(self.contents[i].clone())
         }
@@ -120,7 +130,7 @@ impl ListLike for LazyInductionList {
     }
 
     fn length(&self) -> Result<usize, RuntimeError> {
-        return Err(RuntimeError::ResolvingInfiniteList);
+        return Err(RuntimeError::ResolvingInfiniteList(String::from("Cannot get length of infinite list")));
     }
 }
 
@@ -242,13 +252,13 @@ mod tests {
     #[test]
     fn advanced_format_test() {
         let a = Value::List(Rc::new(LazyInductionList::new(
-            ParseTree::EmptyList,
+            ParseTree::EmptyList{line: 0},
             Value::Number(0),
         )));
         assert_eq!(format!("{}", a), "[...]");
 
         let a = Value::List(Rc::new(LazyMapList::new(
-            ParseTree::Addition(Box::new(ParseTree::Input), Box::new(ParseTree::Input)),
+            ParseTree::Addition{arg1: Box::new(ParseTree::Input{line: 0}), arg2: Box::new(ParseTree::Input{line: 0}), line: 0},
             Rc::new(ExactList::new(vec![Value::Number(1), Value::Number(2)])),
         )));
         assert_eq!(format!("{}", a), "[2, 4]");
@@ -258,7 +268,7 @@ mod tests {
     fn nested_format_test() {
         let a = Value::List(Rc::new(ExactList::new(vec![
             Value::List(Rc::new(LazyInductionList::new(
-                ParseTree::EmptyList,
+                ParseTree::EmptyList{line: 0},
                 Value::Number(0),
             ))),
             Value::List(Rc::new(ExactList::new(vec![
@@ -274,20 +284,19 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn invalid_format_test() {
         let a = Value::List(Rc::new(LazyMapList::new(
-            ParseTree::Addition(Box::new(ParseTree::Input), Box::new(ParseTree::EmptyList)),
+            ParseTree::Addition{arg1: Box::new(ParseTree::Input{line: 0}), arg2: Box::new(ParseTree::EmptyList{line: 0}), line: 0},
             Rc::new(ExactList::new(vec![Value::Number(0), Value::Number(1)])),
         )));
 
-        format!("{}", a);
+        assert!(a.to_string().is_err());
     }
 
     #[test]
     fn map_error_test() {
         let a = LazyMapList::new(
-            ParseTree::Addition(Box::new(ParseTree::Input), Box::new(ParseTree::EmptyList)),
+            ParseTree::Addition{arg1:Box::new(ParseTree::Input{line: 0}), arg2:Box::new(ParseTree::EmptyList{line: 0}), line: 0},
             Rc::new(ExactList::new(vec![Value::Number(0), Value::Number(1)])),
         );
         assert!(a.index(0).is_err());
