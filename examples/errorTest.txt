@@ -1,0 +1,19 @@
+# errorTest.txt
+# by: Peter Vandervelde (r0ckwav3)
+# written for labra-minus
+
+# A program with a reasonably deep error to test error handling and traceback abilities.
+# at the time of writing, the error handler should give a line number but nothing else.
+
+# create a list {0, 1, 2, 3, [], 5}
+0[](1[])(2[])(3[])(4[])([][])(5[])
+
+# multiply each element by 2
+[
+    ()(())
+)
+# add 1 to each element
+[
+    ()(1)
+)
+# exit
