@@ -70,6 +70,11 @@ Assumes that `()` is a list containing all numbers or all lists.
 ```
 Since we are lazy evaluating the induction operator, it's fine if some of the elements of it are invalid as long as we don't access them (for example computing `L[l.size()]` would access an out-of-bounds element).
 
+## Computational Power
+I originally thought that this was Turing complete (given that labra is), but I'm pretty sure that there is no way to loop infinitely in this language. In other words, all programs halt.
+
+This isn't neccesarily a bad thing, but I might try to make it turing complete later.
+
 ## Todo
  * improve user input
     * Arbitrary list
