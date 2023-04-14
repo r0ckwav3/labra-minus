@@ -23,7 +23,7 @@ impl Value {
                 Ok(len) => {
                     s.push('[');
                     for i in 0..len {
-                        ll.index(i)?.to_string_helper(s);
+                        ll.index(i)?.to_string_helper(s)?;
                         if i < len - 1 {
                             s.push(',');
                             s.push(' ');
