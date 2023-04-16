@@ -37,11 +37,7 @@ pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeE
             match (evaluate(arg1, input)?, evaluate(arg2, input)?) {
                 (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1 - n2)),
                 (Value::List(l), Value::Number(n)) => {
-                    if let Ok(i) = usize::try_from(n) {
-                        Ok(l.index(i)?)
-                    } else {
-                        Err(RuntimeError::NegativeIndex(format!("index: {}", n)))
-                    }
+                    Ok(l.index(n)?)
                 }
                 _ => Err(RuntimeError::MismatchedTypes(format!(
                     "Cannot subtract or index with list (line {})",
