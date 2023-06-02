@@ -23,11 +23,9 @@ pub enum ParseError {
 }
 
 pub fn parse(expr: &str) -> Result<ParseTree, ParseError> {
-    match parse_helper(expr, 0).map(|(pt, _i)| pt) {
-        Ok(Some(pt)) => Ok(pt),
-        Ok(None) => Err(ParseError::EmptyFile),
-        Err(e) => Err(e),
-    }
+    parse_helper(expr, 0)
+        .map(|(pt, _i)| pt)
+        .and_then(|pt| pt.ok_or(ParseError::EmptyFile))
 }
 
 // if called right after an open bracket, returns the relevant parsetree and the index of the end bracket
