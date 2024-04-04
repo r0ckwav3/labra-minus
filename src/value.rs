@@ -48,6 +48,15 @@ impl fmt::Display for Value {
     }
 }
 
+impl fmt::Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.to_string(){
+            Ok(s) => write!(f, "{}", s),
+            Err(e) => write!(f, "{:?}", e)
+        }
+    }
+}
+
 // infinite lists are incomparable
 impl PartialEq for Value {
     fn eq(&self, other: &Self) -> bool{
