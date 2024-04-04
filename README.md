@@ -80,5 +80,8 @@ This isn't neccesarily a bad thing, but I might try to make it turing complete l
     * Arbitrary list
  * Make a lazy version of exact lists which encapsulate uses
    * Basically this is because I use 2 element lists for if statements and stuff, which completely ignore one of the elements.
-* Better Error Messages
+ * Better Error Messages
    * Backtrace?
+ * Make map's lazy evaluation not evaluate all previous elements
+ * Add the "find first non-zero" operator to make this turing complete
+ * Add some "programming best practices" to the readme or other docs
