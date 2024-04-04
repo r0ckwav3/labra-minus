@@ -172,6 +172,9 @@ impl ListLike for LazyInductionList {
             // Err(RuntimeError::NegativeIndex(String::from("cannot negatively index infinite lists")))
             loop {
                 let mut resolved = self.resolved.borrow_mut();
+                if resolved.len() == 0 {
+                    resolved.push(self.initial_value.clone());
+                }
                 let prevresolved = resolved[resolved.len() - 1].clone();
                 let nextresolved = evaluate::evaluate(&self.function, &prevresolved)?;
                 if prevresolved == nextresolved {
