@@ -23,7 +23,7 @@ pub enum ParseError {
 }
 
 pub fn parse(expr: &str) -> Result<ParseTree, ParseError> {
-    match parse_helper(expr, 0, 0).map(|(pt, _i)| pt) {
+    match parse_helper(expr, 0, 1).map(|(pt, _, _)| pt) {
         Ok(Some(pt)) => Ok(pt),
         Ok(None) => Err(ParseError::EmptyFile),
         Err(e) => Err(e),
@@ -35,7 +35,7 @@ pub fn parse_helper(
     expr: &str,
     startindex: usize,
     startline: u32
-) -> Result<(Option<ParseTree>, usize), ParseError> {
+) -> Result<(Option<ParseTree>, usize, u32), ParseError> {
     let mut ans: Option<ParseTree> = None;
     let mut numberstart = 0;
     let mut incomment = false;
@@ -66,11 +66,6 @@ pub fn parse_helper(
             if incomment {
                 i += 1;
                 continue;
-            }
-
-            // line numbers:
-            if c == '\n'{
-                linenum+=1;
             }
 
             // Invalid Chars
@@ -109,10 +104,15 @@ pub fn parse_helper(
                 }
             }
 
+            // line numbers:
+            if c == '\n'{
+                linenum+=1;
+            }
+
             // Bracket handling
             match c {
                 '(' | '[' => {
-                    let (rec, bracketend) = parse_helper(expr, i + 1, linenum)?;
+                    let (rec, bracketend, newlinenum) = parse_helper(expr, i + 1, linenum)?;
                     if let Some(endchar) = expr.chars().nth(bracketend) {
                         ans = match ans {
                             None => match (c, endchar, rec) {
@@ -122,7 +122,7 @@ pub fn parse_helper(
                                     return Err(ParseError::SyntaxError(format!(
                                         "Invalid expression with no predecessor: \"{}\" at line {}",
                                         expr.get(..).expect("error in creating error message"),
-                                        linenum
+                                        newlinenum
                                     )));
                                 }
                             },
@@ -145,7 +145,7 @@ pub fn parse_helper(
                                     return Err(ParseError::SyntaxError(format!(
                                         "Invalid expression \"{}\" at line {}",
                                         expr.get(..).expect("error in creating error message"),
-                                        linenum
+                                        newlinenum
                                     )));
                                 }
                             },
@@ -154,11 +154,12 @@ pub fn parse_helper(
                     } else {
                         return Err(ParseError::UnexpectedEOF);
                     }
+                    linenum = newlinenum;
                 }
                 ')' | ']' => {
                     // most close brackets/parens should be consumed by the recursive calls,
                     // so the first one we see is the end of the expression
-                    return Ok((ans, i));
+                    return Ok((ans, i, linenum));
                 }
                 _ => (),
             }
@@ -175,7 +176,7 @@ pub fn parse_helper(
                 ans = parse_number(expr, numberstart, i, linenum)?;
             }
 
-            return Ok((ans, i));
+            return Ok((ans, i, linenum));
         }
         i += 1;
     }
@@ -279,5 +280,22 @@ mod tests {
     fn line_number_test() {
         let a = parse("\n#\n0").expect("failed to parse");
         assert_eq!(a, ParseTree::Number{n:0, line: 3});
+    }
+
+    #[test]
+    fn deep_line_number_test() {
+        let a = parse("0\n(\n0\n)\n(\n0\n)").expect("failed to parse");
+        assert_eq!(
+            a,
+            ParseTree::Addition{
+                arg1: Box::new(ParseTree::Addition{
+                    arg1: Box::new(ParseTree::Number{n:0, line: 1}),
+                    arg2: Box::new(ParseTree::Number{n:0, line: 3}),
+                    line: 2
+                }),
+                arg2: Box::new(ParseTree::Number{n:0, line: 6}),
+                line: 5
+            }
+        );
     }
 }
