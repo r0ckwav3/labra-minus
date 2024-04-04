@@ -8,7 +8,7 @@ You may notice that there is no way to define a function in this language, and t
 
 ## Using the interpreter
 
-Put a file `XXX.txt` in the root directory of the project and run:
+Put a file `XXX.txt` in the project directory and run:
 ```
 cargo run -- XXX.txt
 or
@@ -39,6 +39,8 @@ X[Y]  Index/Subtract - The Yth element of the list X or X - Y. Throws an error i
 X(Y]  Induction      - Returns the lazy-evaluated list {X, Y(X), Y(Y(X)), ...}.
 X[Y)  Map            - Returns {Y(X[0]), Y(X[1]), ...}.
 ```
+### Indexing
+If you index a finite list with a negative value -n, it will return the nth value from the end. If you index an infinite (induction) list with a negative value, it will return the first fixed point, if any appears. If the elements never converge, this will run infinitely.
 
 ## Example Code
 
@@ -71,17 +73,16 @@ Assumes that `()` is a list containing all numbers or all lists.
 Since we are lazy evaluating the induction operator, it's fine if some of the elements of it are invalid as long as we don't access them (for example computing `L[l.size()]` would access an out-of-bounds element).
 
 ## Computational Power
-I originally thought that this was Turing complete (given that labra is), but I'm pretty sure that there is no way to loop infinitely in this language. In other words, all programs halt.
-
-This isn't neccesarily a bad thing, but I might try to make it turing complete later.
+Since negatively indexing an infinite list allows for infinite loops, this is probably turing complete. I might try to make an actual simulator of another turing complete model at some point, but I can't see why it wouldn't work.
 
 ## Todo
- * improve user input
+ * Improve user input
     * Arbitrary list
  * Make a lazy version of exact lists which encapsulate uses
    * Basically this is because I use 2 element lists for if statements and stuff, which completely ignore one of the elements.
+ * Make concat be smarter, I feel like I have some unneccesarily large lists
+   * exact list + exact list should give an exact list
  * Better Error Messages
    * Backtrace?
  * Make map's lazy evaluation not evaluate all previous elements
- * Add the "find first non-zero" operator to make this turing complete
  * Add some "programming best practices" to the readme or other docs

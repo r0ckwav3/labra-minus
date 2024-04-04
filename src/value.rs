@@ -23,7 +23,7 @@ impl Value {
                 Ok(len) => {
                     s.push('[');
                     for i in 0..len {
-                        ll.index(i)?.to_string_helper(s);
+                        ll.index(i)?.to_string_helper(s)?;
                         if i < len - 1 {
                             s.push(',');
                             s.push(' ');
@@ -48,17 +48,50 @@ impl fmt::Display for Value {
     }
 }
 
+impl fmt::Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.to_string(){
+            Ok(s) => write!(f, "{}", s),
+            Err(e) => write!(f, "{:?}", e)
+        }
+    }
+}
+
+// infinite lists are incomparable
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool{
+        match (self, other){
+            (Value::Number(n1), Value::Number(n2)) => n1==n2,
+            (Value::List(l1rc), Value::List(l2rc)) =>
+                list_eq_helper(l1rc, l2rc).unwrap_or(false),
+            _default => false
+        }
+    }
+}
+
+fn list_eq_helper(l1rc: &Rc<dyn ListLike>, l2rc: &Rc<dyn ListLike>) -> Result<bool, RuntimeError>{
+    if l1rc.length()? == l2rc.length()? {
+        for i in 0..l1rc.length()?{
+            if l1rc.index(i)? != l2rc.index(i)?{
+                return Ok(false)
+            }
+        }
+        return Ok(true)
+    }
+    Ok(false)
+}
+
 #[derive(Debug)]
 pub enum RuntimeError {
     OutOfBounds(String),
     ResolvingInfiniteList(String),
     MismatchedTypes(String),
-    NegativeIndex(String),
+    // NegativeIndex(String),
 }
 
 pub trait ListLike {
-    fn index(&self, i: usize) -> Result<Value, RuntimeError>;
-    fn length(&self) -> Result<usize, RuntimeError>;
+    fn index(&self, i: i64) -> Result<Value, RuntimeError>;
+    fn length(&self) -> Result<i64, RuntimeError>;
 }
 
 pub struct ExactList {
@@ -80,7 +113,7 @@ pub struct LazyMapList {
 pub struct LazyConcatList {
     first: Rc<dyn ListLike>,
     second: Rc<dyn ListLike>,
-    firstlen: Option<usize>,
+    firstlen: Option<i64>,
 }
 
 impl ExactList {
@@ -90,20 +123,31 @@ impl ExactList {
 }
 
 impl ListLike for ExactList {
-    fn index(&self, i: usize) -> Result<Value, RuntimeError> {
-        if i >= self.contents.len() {
-            Err(RuntimeError::OutOfBounds(format!(
+    fn index(&self, i: i64) -> Result<Value, RuntimeError> {
+        let trueindex;
+        let len = self.length()?;
+
+        if i >= len || i < -len{
+            return Err(RuntimeError::OutOfBounds(format!(
                 "Attempted to access index {} of list of length {}",
                 i,
                 self.contents.len()
-            )))
-        } else {
-            Ok(self.contents[i].clone())
+            )));
+        }else if i >= 0{
+            trueindex = i;
+        }else{
+            trueindex = len+i;
         }
+
+        let trueindex = usize::try_from(trueindex)
+            .map_err(|_| RuntimeError::OutOfBounds(format!("unknown error when indexing list (i = {})", i)))?;
+
+        Ok(self.contents[trueindex].clone())
     }
 
-    fn length(&self) -> Result<usize, RuntimeError> {
-        return Ok(self.contents.len());
+    fn length(&self) -> Result<i64, RuntimeError> {
+        return i64::try_from(self.contents.len())
+            .map_err(|_| RuntimeError::OutOfBounds(String::from("length could not be converted to i64")));
     }
 }
 
@@ -118,19 +162,40 @@ impl LazyInductionList {
 }
 
 impl ListLike for LazyInductionList {
-    fn index(&self, i: usize) -> Result<Value, RuntimeError> {
-        let mut resolved = self.resolved.borrow_mut();
-        if resolved.len() == 0 {
-            resolved.push(self.initial_value.clone());
+    fn index(&self, i: i64) -> Result<Value, RuntimeError> {
+        if i >= 0 {
+            let i = usize::try_from(i)
+                .map_err(|_| RuntimeError::OutOfBounds(format!("unknown error when indexing list (i = {})", i)))?;
+
+            let mut resolved = self.resolved.borrow_mut();
+            if resolved.len() == 0 {
+                resolved.push(self.initial_value.clone());
+            }
+            while i >= resolved.len() {
+                let prevresolved = resolved[resolved.len() - 1].clone();
+                resolved.push(evaluate::evaluate(&self.function, &prevresolved)?);
+            }
+            Ok(resolved[i].clone())
+        }else{
+            // negative indecies always return the first reached fixed point
+            // Err(RuntimeError::NegativeIndex(String::from("cannot negatively index infinite lists")))
+            loop {
+                let mut resolved = self.resolved.borrow_mut();
+                if resolved.len() == 0 {
+                    resolved.push(self.initial_value.clone());
+                }
+                let prevresolved = resolved[resolved.len() - 1].clone();
+                let nextresolved = evaluate::evaluate(&self.function, &prevresolved)?;
+                if prevresolved == nextresolved {
+                    return Ok(nextresolved);
+                }else{
+                    resolved.push(nextresolved);
+                }
+            }
         }
-        while i >= resolved.len() {
-            let prevresolved = resolved[resolved.len() - 1].clone();
-            resolved.push(evaluate::evaluate(&self.function, &prevresolved)?);
-        }
-        Ok(resolved[i].clone())
     }
 
-    fn length(&self) -> Result<usize, RuntimeError> {
+    fn length(&self) -> Result<i64, RuntimeError> {
         return Err(RuntimeError::ResolvingInfiniteList(String::from("Cannot get length of infinite list")));
     }
 }
@@ -146,19 +211,37 @@ impl LazyMapList {
 }
 
 impl ListLike for LazyMapList {
-    fn index(&self, i: usize) -> Result<Value, RuntimeError> {
+    fn index(&self, i: i64) -> Result<Value, RuntimeError> {
+        let trueindex;
+        let len = self.source.length()?;
+
+        if i >= len || i < -len{
+            return Err(RuntimeError::OutOfBounds(format!(
+                "Attempted to access index {} of list of length {}",
+                i,
+                len
+            )));
+        }else if i >= 0{
+            trueindex = i;
+        }else{
+            trueindex = len+i;
+        }
+
+        let trueindex = usize::try_from(trueindex)
+            .map_err(|_| RuntimeError::OutOfBounds(format!("unknown error when indexing list (i = {})", i)))?;
+
         let mut resolved = self.resolved.borrow_mut();
-        while resolved.len() <= i{
+        while resolved.len() <= trueindex{
             resolved.push(None);
         }
 
         Ok(
-            match &resolved[i] {
+            match &resolved[trueindex] {
                 None => {
                     let ans = self.source
                             .index(i)
                             .and_then(|v| evaluate::evaluate(&self.function, &v))?;
-                    resolved[i] = Some(ans.clone());
+                    resolved[trueindex] = Some(ans.clone());
                     ans
                 }
                 Some(ans) => ans.clone()
@@ -166,14 +249,16 @@ impl ListLike for LazyMapList {
         )
     }
 
-    fn length(&self) -> Result<usize, RuntimeError> {
+    fn length(&self) -> Result<i64, RuntimeError> {
         return self.source.length();
     }
 }
 
 impl LazyConcatList {
     pub fn new(l1: Rc<dyn ListLike>, l2: Rc<dyn ListLike>) -> LazyConcatList {
-        let fl = l1.length().ok();
+        let fl = l1.length()
+            .and_then(|n| i64::try_from(n).map_err(|_| RuntimeError::OutOfBounds(String::from("not sure what happened here"))))
+            .ok();
         LazyConcatList {
             first: l1,
             second: l2,
@@ -183,7 +268,7 @@ impl LazyConcatList {
 }
 
 impl ListLike for LazyConcatList {
-    fn index(&self, i: usize) -> Result<Value, RuntimeError> {
+    fn index(&self, i: i64) -> Result<Value, RuntimeError> {
         match self.firstlen {
             None => self.first.index(i),
             Some(len) => {
@@ -196,7 +281,7 @@ impl ListLike for LazyConcatList {
         }
     }
 
-    fn length(&self) -> Result<usize, RuntimeError> {
+    fn length(&self) -> Result<i64, RuntimeError> {
         return Ok(self.first.length()? + self.second.length()?);
     }
 }
@@ -204,6 +289,20 @@ impl ListLike for LazyConcatList {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn negative_index() {
+        let el = ExactList::new(vec![Value::Number(1), Value::Number(2)]);
+
+        match el.index(-1).expect("indexing error"){
+            Value::Number(n) => assert_eq!(n, 2),
+            _ => panic!("Bad return type")
+        }
+        match el.index(-2).expect("indexing error"){
+            Value::Number(n) => assert_eq!(n, 1),
+            _ => panic!("Bad return type")
+        }
+    }
 
     #[test]
     fn simple_concat() {

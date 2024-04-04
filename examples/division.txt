@@ -1,0 +1,29 @@
+# division.txt
+# by: Peter Vandervelde (r0ckwav3)
+# written for labra-minus
+
+# given a 2 element list [a,b], returns a list [a/b, a%b]
+
+11129[](106[]) #input
+
+(0[])
+# [a,b,c=0]
+# repeatedly subtract b from a
+(
+    ()[0][()[1]][] (()[1][]) (()[2](1)[])
+    [](()[])
+    # [[a-b, b, c+1], (input)]
+    [
+        0(1]
+        # [0, 1, 1, 1...]
+        [()[1][()[0]](()[1][()[0]]())]
+        # if a-b negative (b-a is positive), return the input (halt) instead
+        # b[a](b[a]()) evaluates to 0 if b-a is nonpositive and >0 if b-a is positive
+        # this is encoded as ()[1][()[0]](()[1][()[0]]())
+    ]
+][0[1]]
+# [a%b, b, a/b]
+# make a 1 element list and map so that we can use ()
+[][
+    ()[2][](()[0][])
+)[0]
