@@ -53,19 +53,18 @@ fn main() {
     }
 
     // evaluate
-    let output;
-    match evaluate::evaluate(&parsedfile, &input) {
-        Ok(v) => output = v,
+    let output = evaluate::evaluate(&parsedfile, &input)
+        .and_then(|v|{v.force_resolve()?; Ok(v)});
+    match output {
+        Ok(v) => {
+            println!("{}", v);
+            if let Ok(s) = string::list_to_string(&v) {
+                println!("{}", s)
+            }
+        }
         Err(e) => {
             println!("Runtime error: {:?}", e);
-            return;
         }
-    }
-
-    // output
-    println!("{}", output);
-    if let Ok(s) = string::list_to_string(&output) {
-        println!("{}", s)
     }
 }
 
