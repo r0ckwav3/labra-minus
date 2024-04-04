@@ -5,6 +5,7 @@ mod evaluate;
 mod parsetree;
 mod string;
 mod value;
+mod errors;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

@@ -1,7 +1,9 @@
-use super::evaluate;
-use super::parsetree::ParseTree;
 use std::fmt;
 use std::{cell::RefCell, rc::Rc};
+
+use super::evaluate;
+use super::parsetree::ParseTree;
+use super::errors::RuntimeError;
 
 #[derive(Clone)]
 pub enum Value {
@@ -85,14 +87,6 @@ fn list_eq_helper(l1rc: &Rc<dyn ListLike>, l2rc: &Rc<dyn ListLike>) -> Result<bo
         return Ok(true)
     }
     Ok(false)
-}
-
-#[derive(Debug)]
-pub enum RuntimeError {
-    OutOfBounds(String),
-    ResolvingInfiniteList(String),
-    MismatchedTypes(String),
-    // NegativeIndex(String),
 }
 
 pub trait ListLike {

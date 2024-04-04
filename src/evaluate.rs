@@ -2,7 +2,8 @@ use std::rc::Rc;
 
 use super::parsetree::ParseTree;
 use super::value;
-use super::value::{LazyConcatList, LazyInductionList, LazyMapList, RuntimeError, Value};
+use super::value::{LazyConcatList, LazyInductionList, LazyMapList, Value};
+use super::errors::RuntimeError;
 
 pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeError> {
     match expression {

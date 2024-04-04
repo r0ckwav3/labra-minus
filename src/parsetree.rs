@@ -1,5 +1,6 @@
 use std::str::FromStr;
-use std::fmt;
+
+use super::errors::ParseError;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ParseTree {
@@ -12,29 +13,6 @@ pub enum ParseTree {
     IndexSubtraction{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
     Induction{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
     Map{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
-}
-
-#[derive(Debug)]
-pub enum ParseError {
-    InvalidCharacter(String),
-    UnexpectedEOF,
-    NumberParseError(String),
-    SyntaxError(String),
-    EmptyFile,
-}
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}",
-            match self{
-                ParseError::InvalidCharacter(s) => "Invalid Character Error - ".to_owned() + s,
-                ParseError::UnexpectedEOF =>  "Unexpected EOF".to_owned(),
-                ParseError::NumberParseError(s) => "Number Parse Error - ".to_owned() + s,
-                ParseError::SyntaxError(s) => "Syntax Error - ".to_owned() + s,
-                ParseError::EmptyFile => "Empty File".to_owned()
-            }
-        )
-    }
 }
 
 pub fn parse(expr: &str) -> Result<ParseTree, ParseError> {
