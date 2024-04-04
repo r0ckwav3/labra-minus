@@ -72,7 +72,7 @@ pub fn parse_helper(
                     '0'..='9' | '(' | ')' | '[' | ']' => (),
                     _ => {
                         return Err(ParseError::InvalidCharacter(format!(
-                            "found invalid character {} at character {} (line {})",
+                            "found invalid character \'{}\' at character {} (line {})",
                             c, i, linenum
                         )));
                     }
