@@ -32,7 +32,7 @@ fn main() {
             parsedfile = pt;
         }
         Err(e) => {
-            println!("Parseing error: {:?}", e);
+            println!("Parsing error: {:?}", e);
             return;
         }
     }
