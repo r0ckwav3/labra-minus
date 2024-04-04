@@ -23,7 +23,7 @@ pub enum ParseError {
 }
 
 pub fn parse(expr: &str) -> Result<ParseTree, ParseError> {
-    match parse_helper(expr, 0).map(|(pt, _i)| pt) {
+    match parse_helper(expr, 0, 0).map(|(pt, _i)| pt) {
         Ok(Some(pt)) => Ok(pt),
         Ok(None) => Err(ParseError::EmptyFile),
         Err(e) => Err(e),
@@ -34,13 +34,14 @@ pub fn parse(expr: &str) -> Result<ParseTree, ParseError> {
 pub fn parse_helper(
     expr: &str,
     startindex: usize,
+    startline: u32
 ) -> Result<(Option<ParseTree>, usize), ParseError> {
     let mut ans: Option<ParseTree> = None;
     let mut numberstart = 0;
     let mut incomment = false;
     let mut innumber = false;
     let mut i = startindex;
-    let mut linenum = 1;
+    let mut linenum = startline;
     loop {
         if let Some(c) = expr.chars().nth(i) {
             // Comment handling
@@ -111,7 +112,7 @@ pub fn parse_helper(
             // Bracket handling
             match c {
                 '(' | '[' => {
-                    let (rec, bracketend) = parse_helper(expr, i + 1)?;
+                    let (rec, bracketend) = parse_helper(expr, i + 1, linenum)?;
                     if let Some(endchar) = expr.chars().nth(bracketend) {
                         ans = match ans {
                             None => match (c, endchar, rec) {
