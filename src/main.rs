@@ -64,7 +64,7 @@ fn main() {
             }
         }
         Err(e) => {
-            println!("Runtime error: {:?}", e);
+            println!("Runtime error: {}", e);
         }
     }
 }

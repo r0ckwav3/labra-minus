@@ -30,3 +30,15 @@ impl fmt::Display for ParseError {
         )
     }
 }
+
+impl fmt::Display for RuntimeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}",
+            match self{
+                RuntimeError::OutOfBounds(s) => "Out of Bounds Error - ".to_owned() + s,
+                RuntimeError::ResolvingInfiniteList(s) => "Resolving Infinite List Error - ".to_owned() + s,
+                RuntimeError::MismatchedTypes(s) => "Mismatched Types - ".to_owned() + s,
+            }
+        )
+    }
+}
