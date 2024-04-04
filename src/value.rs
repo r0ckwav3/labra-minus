@@ -1,5 +1,6 @@
 use super::evaluate;
 use super::parsetree::ParseTree;
+use std::borrow::Borrow;
 use std::fmt;
 use std::{cell::RefCell, rc::Rc};
 
@@ -46,6 +47,30 @@ impl fmt::Display for Value {
             Err(e) => write!(f, "{:?}", e)
         }
     }
+}
+
+// infinite lists are incomparable
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool{
+        match (self, other){
+            (Value::Number(n1), Value::Number(n2)) => n1==n2,
+            (Value::List(l1rc), Value::List(l2rc)) =>
+                list_eq_helper(l1rc, l2rc).unwrap_or(false),
+            _default => false
+        }
+    }
+}
+
+fn list_eq_helper(l1rc: &Rc<dyn ListLike>, l2rc: &Rc<dyn ListLike>) -> Result<bool, RuntimeError>{
+    if l1rc.length()? == l2rc.length()? {
+        for i in 0..l1rc.length()?{
+            if l1rc.index(i)? != l2rc.index(i)?{
+                return Ok(false)
+            }
+        }
+        return Ok(true)
+    }
+    Ok(false)
 }
 
 #[derive(Debug)]
@@ -145,17 +170,17 @@ impl ListLike for LazyInductionList {
             Ok(resolved[i].clone())
         }else{
             // negative indecies always return the first reached fixed point
-            Err(RuntimeError::OutOfBounds(String::from("cannot negatively index infinite lists")))
-            // loop {
-            //     let mut resolved = self.resolved.borrow_mut();
-            //     let prevresolved = resolved[resolved.len() - 1].clone();
-            //     let nextresolved = evaluate::evaluate(&self.function, &prevresolved)?;
-            //     if (prevresolved == nextresolved){
-            //         return Ok(nextresolved);
-            //     }else{
-            //         resolved.push(nextresolved);
-            //     }
-            // }
+            // Err(RuntimeError::NegativeIndex(String::from("cannot negatively index infinite lists")))
+            loop {
+                let mut resolved = self.resolved.borrow_mut();
+                let prevresolved = resolved[resolved.len() - 1].clone();
+                let nextresolved = evaluate::evaluate(&self.function, &prevresolved)?;
+                if (prevresolved == nextresolved){
+                    return Ok(nextresolved);
+                }else{
+                    resolved.push(nextresolved);
+                }
+            }
         }
     }
 
