@@ -1,6 +1,5 @@
 use super::evaluate;
 use super::parsetree::ParseTree;
-use std::borrow::Borrow;
 use std::fmt;
 use std::{cell::RefCell, rc::Rc};
 
@@ -78,7 +77,7 @@ pub enum RuntimeError {
     OutOfBounds(String),
     ResolvingInfiniteList(String),
     MismatchedTypes(String),
-    NegativeIndex(String),
+    // NegativeIndex(String),
 }
 
 pub trait ListLike {
@@ -175,7 +174,7 @@ impl ListLike for LazyInductionList {
                 let mut resolved = self.resolved.borrow_mut();
                 let prevresolved = resolved[resolved.len() - 1].clone();
                 let nextresolved = evaluate::evaluate(&self.function, &prevresolved)?;
-                if (prevresolved == nextresolved){
+                if prevresolved == nextresolved {
                     return Ok(nextresolved);
                 }else{
                     resolved.push(nextresolved);
