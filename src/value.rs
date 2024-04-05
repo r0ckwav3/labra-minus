@@ -4,6 +4,7 @@ use std::str::FromStr;
 use regex::Regex;
 
 use super::evaluate;
+use super::string;
 use super::parsetree::ParseTree;
 use super::errors::RuntimeError;
 
@@ -167,27 +168,54 @@ pub struct ParseExactListError;
 impl FromStr for ExactList{
     type Err = ParseExactListError;
     fn from_str(s: &str) -> Result<Self, Self::Err>{
-
-        let r = Regex::new(r"^\[ *([0-9]+)( *, *[0-9]+)* *\]$").map_err(|_|ParseExactListError)?;
-        if r.is_match(s) {
-            let mut nums = Vec::<i64>::new();
-            let mut numstart = 0;
-            for (i, c) in s.chars().enumerate(){
-                if !c.is_ascii_digit() {
-                    if numstart != i {
-                        nums.push(s[numstart..i].parse().map_err(|_|ParseExactListError)?)
-                    }
-                    numstart = i+1;
-                }
-            }
-            let values = nums.iter().map(|n|
-                Value::Number(n.clone())
-            );
-            return Ok(ExactList{
-                contents: values.collect()
-            })
+        // Assert that the first and last chars are [...]
+        if s.chars().next().ok_or(ParseExactListError)? != '[' ||
+           s.chars().last().ok_or(ParseExactListError)? != ']'{
+            return Err(ParseExactListError);
         }
-        Err(ParseExactListError)
+        // First, split the string into the sections between top level commas
+        let mut sections = Vec::<&str>::new();
+        let mut lastcomma = 0;
+        let mut depth = 0;
+        for (i, c) in s.chars().enumerate(){
+            if i == 0 {
+                continue;
+            } else if i == s.chars().count()-1 {
+                if depth != 0{
+                    return Err(ParseExactListError);
+                }
+                sections.push(&s[lastcomma+1..i]);
+                continue;
+            }
+
+            if c == '['{
+                depth += 1;
+            }else if c == ']'{
+                depth -= 1;
+                if depth < 0{
+                    return Err(ParseExactListError);
+                }
+            }else if c == ',' && depth == 0{
+                sections.push(&s[lastcomma+1..i]);
+                lastcomma = i;
+            }
+        }
+        // parse into numbers, lists and then a string if possible
+        let values = sections.iter().map(|ss| (*ss).trim().to_owned()).map(|ss|
+            if let Ok(n) = ss.parse() {
+                Value::Number(n)
+            } else if let Ok(l) = ss.parse::<ExactList>() {
+                Value::List(Rc::new(l))
+            } else if let Ok(l) = string::string_to_list(&ss) {
+                l
+            } else {
+                panic!("Unknown error parsing string \"{}\" in ExactList parser", ss);
+            }
+        );
+
+        return Ok(ExactList{
+            contents: values.collect()
+        })
     }
 }
 
