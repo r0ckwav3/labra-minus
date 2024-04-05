@@ -1,5 +1,6 @@
 use std::env;
 use std::fs;
+use std::rc::Rc;
 
 mod evaluate;
 mod parsetree;
@@ -44,6 +45,8 @@ fn main() {
         let rawinput = &args[2];
         if let Ok(n) = rawinput.parse() {
             input = value::Value::Number(n);
+        } else if let Ok(n) = rawinput.parse::<value::ExactList>() {
+            input = value::Value::List(Rc::new(n));
         } else if let Ok(l) = string::string_to_list(rawinput) {
             input = l;
         } else {
