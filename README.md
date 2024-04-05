@@ -76,8 +76,6 @@ Since we are lazy evaluating the induction operator, it's fine if some of the el
 Since negatively indexing an infinite list allows for infinite loops, this is probably turing complete. I might try to make an actual simulator of another turing complete model at some point, but I can't see why it wouldn't work.
 
 ## Todo
- * Improve user input
-    * Arbitrary list
  * Make a lazy version of exact lists which encapsulate uses
    * Basically this is because I use 2 element lists for if statements and stuff, which completely ignore one of the elements.
  * Make concat be smarter, I feel like I have some unneccesarily large lists
