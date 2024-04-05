@@ -84,5 +84,4 @@ Since negatively indexing an infinite list allows for infinite loops, this is pr
    * exact list + exact list should give an exact list
  * Better Error Messages
    * Backtrace?
- * Make map's lazy evaluation not evaluate all previous elements
  * Add some "programming best practices" to the readme or other docs
