@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+use super::errors::ParseError;
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ParseTree {
     Number{n: i64, line: u32},
@@ -11,15 +13,6 @@ pub enum ParseTree {
     IndexSubtraction{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
     Induction{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
     Map{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
-}
-
-#[derive(Debug)]
-pub enum ParseError {
-    InvalidCharacter(String),
-    UnexpectedEOF,
-    NumberParseError(String),
-    SyntaxError(String),
-    EmptyFile,
 }
 
 pub fn parse(expr: &str) -> Result<ParseTree, ParseError> {
@@ -72,7 +65,7 @@ pub fn parse_helper(
                     '0'..='9' | '(' | ')' | '[' | ']' => (),
                     _ => {
                         return Err(ParseError::InvalidCharacter(format!(
-                            "found invalid character {} at character {} (line {})",
+                            "found invalid character \'{}\' at character {} (line {})",
                             c, i, linenum
                         )));
                     }

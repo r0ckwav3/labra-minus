@@ -1,7 +1,9 @@
-use super::evaluate;
-use super::parsetree::ParseTree;
 use std::fmt;
 use std::{cell::RefCell, rc::Rc};
+
+use super::evaluate;
+use super::parsetree::ParseTree;
+use super::errors::RuntimeError;
 
 #[derive(Clone)]
 pub enum Value {
@@ -35,6 +37,12 @@ impl Value {
             },
         };
         Ok(())
+    }
+    pub fn force_resolve(&self) -> Result<(), RuntimeError>{
+        match self {
+            Value::Number(_) => Ok(()),
+            Value::List(ll) => ll.force_resolve()
+        }
     }
 }
 
@@ -81,17 +89,10 @@ fn list_eq_helper(l1rc: &Rc<dyn ListLike>, l2rc: &Rc<dyn ListLike>) -> Result<bo
     Ok(false)
 }
 
-#[derive(Debug)]
-pub enum RuntimeError {
-    OutOfBounds(String),
-    ResolvingInfiniteList(String),
-    MismatchedTypes(String),
-    // NegativeIndex(String),
-}
-
 pub trait ListLike {
     fn index(&self, i: i64) -> Result<Value, RuntimeError>;
     fn length(&self) -> Result<i64, RuntimeError>;
+    fn force_resolve(&self) -> Result<(), RuntimeError>;
 }
 
 pub struct ExactList {
@@ -149,6 +150,13 @@ impl ListLike for ExactList {
         return i64::try_from(self.contents.len())
             .map_err(|_| RuntimeError::OutOfBounds(String::from("length could not be converted to i64")));
     }
+
+    fn force_resolve(&self) -> Result<(), RuntimeError> {
+        for i in 0..self.contents.len(){
+            self.contents[i].force_resolve()?
+        }
+        Ok(())
+    }
 }
 
 impl LazyInductionList {
@@ -197,6 +205,10 @@ impl ListLike for LazyInductionList {
 
     fn length(&self) -> Result<i64, RuntimeError> {
         return Err(RuntimeError::ResolvingInfiniteList(String::from("Cannot get length of infinite list")));
+    }
+
+    fn force_resolve(&self) -> Result<(), RuntimeError> {
+        Err(RuntimeError::ResolvingInfiniteList("Attempted to force_resolve an infinite list. (Does your final output include one?)".to_owned()))
     }
 }
 
@@ -252,6 +264,26 @@ impl ListLike for LazyMapList {
     fn length(&self) -> Result<i64, RuntimeError> {
         return self.source.length();
     }
+
+    fn force_resolve(&self) -> Result<(), RuntimeError> {
+        let len = self.source.length()?;
+        self.source.force_resolve()?;
+
+        let mut resolved = self.resolved.borrow_mut();
+        while resolved.len() <= len as usize{
+            resolved.push(None);
+        }
+
+        for i in 0..len{
+            let trueindex = usize::try_from(i)
+                .map_err(|_| RuntimeError::OutOfBounds(format!("unknown error when indexing list (i = {})", i)))?;
+
+            resolved[trueindex] = Some(self.source
+                .index(i)
+                .and_then(|v| evaluate::evaluate(&self.function, &v))?);
+        }
+        Ok(())
+    }
 }
 
 impl LazyConcatList {
@@ -283,6 +315,11 @@ impl ListLike for LazyConcatList {
 
     fn length(&self) -> Result<i64, RuntimeError> {
         return Ok(self.first.length()? + self.second.length()?);
+    }
+
+    fn force_resolve(&self) -> Result<(), RuntimeError> {
+        self.first.force_resolve()?;
+        self.second.force_resolve()
     }
 }
 

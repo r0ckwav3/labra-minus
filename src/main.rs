@@ -5,6 +5,7 @@ mod evaluate;
 mod parsetree;
 mod string;
 mod value;
+mod errors;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -32,7 +33,7 @@ fn main() {
             parsedfile = pt;
         }
         Err(e) => {
-            println!("Parseing error: {:?}", e);
+            println!("Parsing error: {}", e);
             return;
         }
     }
@@ -53,19 +54,18 @@ fn main() {
     }
 
     // evaluate
-    let output;
-    match evaluate::evaluate(&parsedfile, &input) {
-        Ok(v) => output = v,
-        Err(e) => {
-            println!("Runtime error: {:?}", e);
-            return;
+    let output = evaluate::evaluate(&parsedfile, &input)
+        .and_then(|v|{v.force_resolve()?; Ok(v)});
+    match output {
+        Ok(v) => {
+            println!("{}", v);
+            if let Ok(s) = string::list_to_string(&v) {
+                println!("{}", s)
+            }
         }
-    }
-
-    // output
-    println!("{}", output);
-    if let Ok(s) = string::list_to_string(&output) {
-        println!("{}", s)
+        Err(e) => {
+            println!("Runtime error: {}", e);
+        }
     }
 }
 
