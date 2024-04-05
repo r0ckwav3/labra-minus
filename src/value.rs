@@ -1,5 +1,7 @@
 use std::fmt;
 use std::{cell::RefCell, rc::Rc};
+use std::str::FromStr;
+use regex::Regex;
 
 use super::evaluate;
 use super::parsetree::ParseTree;
@@ -156,6 +158,36 @@ impl ListLike for ExactList {
             self.contents[i].force_resolve()?
         }
         Ok(())
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct ParseExactListError;
+
+impl FromStr for ExactList{
+    type Err = ParseExactListError;
+    fn from_str(s: &str) -> Result<Self, Self::Err>{
+
+        let r = Regex::new(r"^\[ *([0-9]+)( *, *[0-9]+)* *\]$").map_err(|_|ParseExactListError)?;
+        if r.is_match(s) {
+            let mut nums = Vec::<i64>::new();
+            let mut numstart = 0;
+            for (i, c) in s.chars().enumerate(){
+                if !c.is_ascii_digit() {
+                    if numstart != i {
+                        nums.push(s[numstart..i].parse().map_err(|_|ParseExactListError)?)
+                    }
+                    numstart = i+1;
+                }
+            }
+            let values = nums.iter().map(|n|
+                Value::Number(n.clone())
+            );
+            return Ok(ExactList{
+                contents: values.collect()
+            })
+        }
+        Err(ParseExactListError)
     }
 }
 
