@@ -69,6 +69,7 @@ impl Parser {
 
                 if incomment {
                     self.char_i += 1;
+                    self.colnum += 1;
                     continue;
                 }
 
@@ -110,7 +111,8 @@ impl Parser {
 
                 // line numbers:
                 if c == '\n'{
-                    self.linenum+=1;
+                    self.linenum += 1;
+                    self.colnum = 0;
                 }
 
                 // Bracket handling
@@ -118,6 +120,7 @@ impl Parser {
                     '(' | '[' => {
                         let old_linenum = self.linenum;
                         self.char_i += 1;
+                        self.colnum += 1;
                         let rec = self.parse()?;
                         if let Some(endchar) = self.s.chars().nth(self.char_i) {
                             ans = match ans {
@@ -181,6 +184,7 @@ impl Parser {
                 return Ok(ans);
             }
             self.char_i += 1;
+            self.colnum += 1;
         }
     }
 
