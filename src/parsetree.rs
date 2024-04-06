@@ -13,6 +13,7 @@ pub enum ParseTree {
     IndexSubtraction{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
     Induction{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
     Map{arg1: Box<ParseTree>, arg2: Box<ParseTree>, line: u32},
+    Debug{arg: Box<ParseTree>, line: u32, col: u32},
 }
 
 pub struct Parser {
@@ -76,7 +77,7 @@ impl Parser {
                 // Invalid Chars
                 if !char::is_whitespace(c) {
                     match c {
-                        '0'..='9' | '(' | ')' | '[' | ']' => (),
+                        '0'..='9' | '(' | ')' | '[' | ']' | '!' => (),
                         _ => {
                             return Err(ParseError::InvalidCharacter(format!(
                                 "found invalid character \'{}\' at {}:{}",
@@ -168,6 +169,20 @@ impl Parser {
                         return Ok(ans);
                     }
                     _ => (),
+                }
+
+                // debug operator
+                if c == '!' {
+                    if let Some(prevpt) = ans {
+                        ans = Some(ParseTree::Debug{
+                            arg: Box::new(prevpt), line: self.linenum, col: self.colnum
+                        })
+                    }else{
+                        return Err(ParseError::SyntaxError(format!(
+                            "Invalid expression with no predecessor: \"!\" at {}:{}",
+                            self.linenum, self.colnum
+                        )));
+                    }
                 }
             } else {
                 // the other return case doesn't need this because the non-digit check already catches it
