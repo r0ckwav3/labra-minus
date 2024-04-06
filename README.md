@@ -42,6 +42,17 @@ X[Y)  Map            - Returns {Y(X[0]), Y(X[1]), ...}.
 ### Indexing
 If you index a finite list with a negative value -n, it will return the nth value from the end. If you index an infinite (induction) list with a negative value, it will return the first fixed point, if any appears. If the elements never converge, this will run infinitely.
 
+### Debugs
+There is also a pseudo-operator in labra-minus `!` called the debug operator. It prints whatever it is given and then ouputs it unchanged. For example, this code:
+```
+10!(20)
+```
+outputs:
+```
+Debug at 1:2 - 10
+30
+```
+
 ## Example Code
 
 More examples can be found in `/examples`.
@@ -83,4 +94,4 @@ Since negatively indexing an infinite list allows for infinite loops, this is pr
  * Better Error Messages
    * Backtrace?
  * Add some "programming best practices" to the readme or other docs
- * Use "!" as a debug operator which prints the input, and current line and then returns the input
+ * Add some way to give a default input to a program?
