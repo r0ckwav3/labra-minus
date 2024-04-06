@@ -34,7 +34,7 @@ impl Parser {
             s: s.to_owned(),
             char_i: 0,
             linenum: 1,
-            colnum: 0
+            colnum: 1
         }
     }
     // if called with char_i right after an open bracket:
@@ -112,7 +112,7 @@ impl Parser {
                 // line numbers:
                 if c == '\n'{
                     self.linenum += 1;
-                    self.colnum = 0;
+                    self.colnum = 1;
                 }
 
                 // Bracket handling
