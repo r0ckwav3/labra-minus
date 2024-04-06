@@ -323,4 +323,22 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn debug_test() {
+        let a = parse("[]![]").expect("failed to parse");
+        assert_eq!(
+            a,
+            ParseTree::Encapsulate {
+                arg: Box::new(ParseTree::Debug{
+                    arg: Box::new(ParseTree::EmptyList{
+                        line: 1
+                    }),
+                    line: 1,
+                    col: 3
+                }),
+                line: 1
+            }
+        );
+    }
 }

@@ -220,6 +220,18 @@ mod tests {
     }
 
     #[test]
+    fn debug_test() {
+        let expr = "2!(2)";
+        let pt = parsetree::parse(expr).expect("parse error");
+        let result = evaluate::evaluate(&pt, &value::Value::Number(0)).expect("evaluation failure");
+        if let value::Value::Number(n) = result {
+            assert_eq!(n, 4);
+        } else {
+            panic!("Bad return type");
+        }
+    }
+
+    #[test]
     #[ignore]
     fn flatten_test() {
         /*
