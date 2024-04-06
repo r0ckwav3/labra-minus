@@ -1,0 +1,31 @@
+# divisionDebug.txt
+# by: Peter Vandervelde (r0ckwav3)
+# written for labra-minus
+
+# Mostly identical to division.txt, but with debug operators to help see what's happening
+# also expects an input
+# given a 2 element list [a,b], returns a list [a/b, a%b]
+
+()(0[])
+# [a,b,c=0]
+# repeatedly subtract b from a
+(
+    # DEBUG: show the input on each iteration
+    ()![0][()[1]][] (()[1][]) (()[2](1)[])
+    [](()[])!
+    # DEBUG: [[a-b, b, c+1], (input)]
+    [
+        0(1]
+        # [0, 1, 1, 1...]
+        [()[1][()[0]]!(()[1][()[0]]())!]
+        # DEBUG: b-a and (b-a)+|b-a|
+        # if a-b negative (b-a is positive), return the input (halt) instead
+        # b[a](b[a]()) = (b-a)+|b-a| evaluates to 0 if b-a is nonpositive and >0 if b-a is positive
+        # this is encoded as ()[1][()[0]](()[1][()[0]]())
+    ]
+][0[1]]!
+# DEBUG: [a%b, b, a/b]
+# make a 1 element list and map so that we can use ()
+[][
+    ()[2][](()[0][])
+)[0]
