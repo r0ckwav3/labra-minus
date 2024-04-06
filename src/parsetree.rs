@@ -53,9 +53,9 @@ impl Parser {
                     if innumber {
                         if let Some(_) = ans {
                             return Err(ParseError::SyntaxError(format!(
-                                "Found number not leading expression at char {} (line {})",
-                                self.char_i,
-                                self.linenum
+                                "Found number not leading expression at {}:{}",
+                                self.linenum,
+                                self.colnum
                             )));
                         }
                         ans = self.parse_number(numberstart, self.char_i)?;
@@ -79,8 +79,8 @@ impl Parser {
                         '0'..='9' | '(' | ')' | '[' | ']' => (),
                         _ => {
                             return Err(ParseError::InvalidCharacter(format!(
-                                "found invalid character \'{}\' at character {} (line {})",
-                                c, self.char_i, self.linenum
+                                "found invalid character \'{}\' at {}:{}",
+                                c, self.linenum, self.colnum
                             )));
                         }
                     }
@@ -98,9 +98,9 @@ impl Parser {
                         if innumber {
                             if let Some(_) = ans {
                                 return Err(ParseError::SyntaxError(format!(
-                                    "Found number not leading expression at char {} (line {})",
-                                    self.char_i,
-                                    self.linenum
+                                    "Found number not leading expression at {}:{}",
+                                    self.linenum,
+                                    self.colnum
                                 )));
                             }
                             ans = self.parse_number(numberstart, self.char_i)?;
@@ -119,6 +119,7 @@ impl Parser {
                 match c {
                     '(' | '[' => {
                         let old_linenum = self.linenum;
+                        let old_colnum = self.colnum;
                         self.char_i += 1;
                         self.colnum += 1;
                         let rec = self.parse()?;
@@ -129,9 +130,9 @@ impl Parser {
                                     ('[', ']', None) => Some(ParseTree::EmptyList{line: old_linenum}),
                                     _ => {
                                         return Err(ParseError::SyntaxError(format!(
-                                            "Invalid expression with no predecessor: \"{}{}\" at line {}",
+                                            "Invalid expression with no predecessor: \"{}{}\" at {}:{}",
                                             c, endchar,
-                                            old_linenum
+                                            old_linenum, old_colnum
                                         )));
                                     }
                                 },
@@ -150,9 +151,9 @@ impl Parser {
                                             arg1: Box::new(prevpt), arg2: Box::new(pt), line: old_linenum}),
                                     _ => {
                                         return Err(ParseError::SyntaxError(format!(
-                                            "Invalid expression \"{}...{}\" at line {}",
+                                            "Invalid expression \"{}...{}\" at {}:{}",
                                             c, endchar,
-                                            old_linenum
+                                            old_linenum, old_colnum
                                         )));
                                     }
                                 },
@@ -173,9 +174,9 @@ impl Parser {
                 if innumber {
                     if let Some(_) = ans {
                         return Err(ParseError::SyntaxError(format!(
-                            "Found number not leading expression at char {} (line {})",
-                            self.char_i,
-                            self.linenum
+                            "Found number not leading expression at {}:{}",
+                            self.linenum,
+                            self.colnum
                         )));
                     }
                     ans = self.parse_number(numberstart, self.char_i)?;
@@ -194,8 +195,9 @@ impl Parser {
             if let Ok(n) = i64::from_str(numberstr) {
                 Ok(Some(ParseTree::Number{n, line: self.linenum}))
             } else {
+                let old_colnum = self.colnum as usize - (self.char_i - start);
                 Err(ParseError::NumberParseError(format!(
-                    "Failed to parse number at char {} (line {})", start, self.linenum
+                    "Failed to parse number at {}:{}", old_colnum, self.linenum
                 )))
             }
         } else {
