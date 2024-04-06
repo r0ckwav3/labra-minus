@@ -83,3 +83,4 @@ Since negatively indexing an infinite list allows for infinite loops, this is pr
  * Better Error Messages
    * Backtrace?
  * Add some "programming best practices" to the readme or other docs
+ * Use "!" as a debug operator which prints the input, and current line and then returns the input
