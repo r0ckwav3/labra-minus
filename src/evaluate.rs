@@ -59,6 +59,12 @@ pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeE
                 line
             ))),
         },
+
+        ParseTree::Debug{arg, line, col} => {
+            let eval = evaluate(arg, input)?;
+            println!("Debug at {}:{} - {:?}", line, col, eval);
+            Ok(eval)
+        }
     }
 }
 
