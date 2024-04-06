@@ -1,7 +1,6 @@
 use std::fmt;
 use std::{cell::RefCell, rc::Rc};
 use std::str::FromStr;
-use regex::Regex;
 
 use super::evaluate;
 use super::string;
