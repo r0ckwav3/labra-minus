@@ -92,6 +92,11 @@ Since negatively indexing an infinite list allows for infinite loops, this is pr
  * Make concat be smarter, I feel like I have some unneccesarily large lists
    * exact list + exact list should give an exact list
  * Better Error Messages
-   * Backtrace?
+   * Backtrace? What would that look like
  * Add some "programming best practices" to the readme or other docs
- * Add some way to give a default input to a program?
+   * How do do stuff like conditionals
+   * That trick I do in division.txt to move a value into `()`
+ * "preview" infinite lists when trying to print them (5 els or so?)
+Maybe features?
+ * Add some way to give a default input to a program
+ * Allow indexing by lists (like how numpy does it)
