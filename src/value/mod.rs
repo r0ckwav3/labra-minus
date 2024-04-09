@@ -36,20 +36,23 @@ impl Value {
     fn to_string_helper(&self, s: &mut String) -> Result<(), RuntimeError>{
         match self {
             Value::Number(n) => s.push_str(&format!("{}", n)[..]),
-            Value::List(ll) => match ll.length() {
-                Err(RuntimeError::ResolvingInfiniteList(_)) => s.push_str("[...]"),
-                Ok(len) => {
-                    s.push('[');
-                    for i in 0..len {
-                        ll.index(i)?.to_string_helper(s)?;
-                        if i < len - 1 {
-                            s.push(',');
-                            s.push(' ');
-                        }
+            Value::List(ll) => {
+                let (len, is_inf) = match ll.length() {
+                    Err(RuntimeError::ResolvingInfiniteList(_)) => (INFINITE_LIST_PREVIEW_LENGTH, true),
+                    Ok(len) => (len, false),
+                    Err(e) => return Err(e)
+                };
+                s.push('[');
+                for i in 0..len {
+                    ll.index(i)?.to_string_helper(s)?;
+                    if i < len - 1 {
+                        s.push_str(", ");
                     }
-                    s.push(']');
                 }
-                Err(e) => return Err(e)
+                if is_inf{
+                    s.push_str(", ...");
+                }
+                s.push(']');
             },
         };
         Ok(())
