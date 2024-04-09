@@ -3,9 +3,10 @@ use std::{cell::RefCell, rc::Rc};
 use std::str::FromStr;
 
 use super::evaluate;
-use super::string;
 use super::parsetree::ParseTree;
 use super::errors::RuntimeError;
+
+pub mod string;
 
 #[derive(Clone)]
 pub enum Value {

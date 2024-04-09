@@ -4,8 +4,8 @@ use std::rc::Rc;
 
 mod evaluate;
 mod parsetree;
-mod string;
 mod value;
+use value::string;
 mod errors;
 
 fn main() {
