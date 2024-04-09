@@ -4,18 +4,18 @@ use super::{ListLike, Value};
 
 use crate::errors::RuntimeError;
 
-pub struct LazyConcatList {
+pub struct ConcatList {
     first: Rc<dyn ListLike>,
     second: Rc<dyn ListLike>,
     firstlen: Option<i64>,
 }
 
-impl LazyConcatList {
-    pub fn new(l1: Rc<dyn ListLike>, l2: Rc<dyn ListLike>) -> LazyConcatList {
+impl ConcatList {
+    pub fn new(l1: Rc<dyn ListLike>, l2: Rc<dyn ListLike>) -> ConcatList {
         let fl = l1.length()
             .and_then(|n| i64::try_from(n).map_err(|_| RuntimeError::OutOfBounds(String::from("not sure what happened here"))))
             .ok();
-        LazyConcatList {
+        ConcatList {
             first: l1,
             second: l2,
             firstlen: fl,
@@ -23,7 +23,7 @@ impl LazyConcatList {
     }
 }
 
-impl ListLike for LazyConcatList {
+impl ListLike for ConcatList {
     fn index(&self, i: i64) -> Result<Value, RuntimeError> {
         match self.firstlen {
             None => self.first.index(i),

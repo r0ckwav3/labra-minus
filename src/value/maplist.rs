@@ -6,15 +6,15 @@ use crate::evaluate;
 use crate::errors::RuntimeError;
 use crate::parsetree::ParseTree;
 
-pub struct LazyMapList {
+pub struct MapList {
     function: ParseTree,
     source: Rc<dyn ListLike>,
     resolved: RefCell<Vec<Option<Value>>>,
 }
 
-impl LazyMapList {
-    pub fn new(f: ParseTree, s: Rc<dyn ListLike>) -> LazyMapList {
-        LazyMapList {
+impl MapList {
+    pub fn new(f: ParseTree, s: Rc<dyn ListLike>) -> MapList {
+        MapList {
             function: f,
             source: s,
             resolved: RefCell::new(Vec::new())
@@ -22,7 +22,7 @@ impl LazyMapList {
     }
 }
 
-impl ListLike for LazyMapList {
+impl ListLike for MapList {
     fn index(&self, i: i64) -> Result<Value, RuntimeError> {
         let trueindex;
         let len = self.source.length()?;

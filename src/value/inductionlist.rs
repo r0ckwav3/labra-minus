@@ -6,15 +6,15 @@ use crate::evaluate;
 use crate::errors::RuntimeError;
 use crate::parsetree::ParseTree;
 
-pub struct LazyInductionList {
+pub struct InductionList {
     function: ParseTree,
     initial_value: Value,
     resolved: RefCell<Vec<Value>>,
 }
 
-impl LazyInductionList {
-    pub fn new(f: ParseTree, init: Value) -> LazyInductionList {
-        LazyInductionList {
+impl InductionList {
+    pub fn new(f: ParseTree, init: Value) -> InductionList {
+        InductionList {
             function: f,
             initial_value: init,
             resolved: RefCell::new(Vec::new()),
@@ -22,7 +22,7 @@ impl LazyInductionList {
     }
 }
 
-impl ListLike for LazyInductionList {
+impl ListLike for InductionList {
     fn index(&self, i: i64) -> Result<Value, RuntimeError> {
         if i >= 0 {
             let i = usize::try_from(i)

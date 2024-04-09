@@ -9,9 +9,9 @@ pub mod inductionlist;
 pub mod maplist;
 pub mod concatlist;
 pub use exactlist::ExactList;
-pub use inductionlist::LazyInductionList;
-pub use maplist::LazyMapList;
-pub use concatlist::LazyConcatList;
+pub use inductionlist::InductionList;
+pub use maplist::MapList;
+pub use concatlist::ConcatList;
 
 #[derive(Clone)]
 pub enum Value {
@@ -126,7 +126,7 @@ mod tests {
     fn simple_concat() {
         let el1 = ExactList::new(vec![Value::Number(1), Value::Number(2)]);
         let el2 = ExactList::new(vec![Value::Number(3), Value::Number(4)]);
-        let lcl = LazyConcatList::new(Rc::new(el1), Rc::new(el2));
+        let lcl = ConcatList::new(Rc::new(el1), Rc::new(el2));
 
         assert_eq!(lcl.length().expect("length error"), 4);
         match lcl.index(0).expect("length error") {
@@ -151,8 +151,8 @@ mod tests {
         let el1 = ExactList::new(vec![Value::Number(1), Value::Number(2)]);
         let el2 = ExactList::new(vec![Value::Number(3), Value::Number(4)]);
         let el3 = ExactList::new(vec![Value::Number(5), Value::Number(6)]);
-        let lcl1 = LazyConcatList::new(Rc::new(el1), Rc::new(el2));
-        let lcl2 = LazyConcatList::new(Rc::new(lcl1), Rc::new(el3));
+        let lcl1 = ConcatList::new(Rc::new(el1), Rc::new(el2));
+        let lcl2 = ConcatList::new(Rc::new(lcl1), Rc::new(el3));
 
         assert_eq!(lcl2.length().expect("length error"), 6);
         match lcl2.index(0).expect("index error") {
@@ -184,13 +184,13 @@ mod tests {
 
     #[test]
     fn advanced_format_test() {
-        let a = Value::List(Rc::new(LazyInductionList::new(
+        let a = Value::List(Rc::new(InductionList::new(
             ParseTree::EmptyList{line: 0},
             Value::Number(0),
         )));
         assert_eq!(format!("{}", a), "[...]");
 
-        let a = Value::List(Rc::new(LazyMapList::new(
+        let a = Value::List(Rc::new(MapList::new(
             ParseTree::Addition{arg1: Box::new(ParseTree::Input{line: 0}), arg2: Box::new(ParseTree::Input{line: 0}), line: 0},
             Rc::new(ExactList::new(vec![Value::Number(1), Value::Number(2)])),
         )));
@@ -200,7 +200,7 @@ mod tests {
     #[test]
     fn nested_format_test() {
         let a = Value::List(Rc::new(ExactList::new(vec![
-            Value::List(Rc::new(LazyInductionList::new(
+            Value::List(Rc::new(InductionList::new(
                 ParseTree::EmptyList{line: 0},
                 Value::Number(0),
             ))),
@@ -218,7 +218,7 @@ mod tests {
 
     #[test]
     fn invalid_format_test() {
-        let a = Value::List(Rc::new(LazyMapList::new(
+        let a = Value::List(Rc::new(MapList::new(
             ParseTree::Addition{arg1: Box::new(ParseTree::Input{line: 0}), arg2: Box::new(ParseTree::EmptyList{line: 0}), line: 0},
             Rc::new(ExactList::new(vec![Value::Number(0), Value::Number(1)])),
         )));
@@ -228,7 +228,7 @@ mod tests {
 
     #[test]
     fn map_error_test() {
-        let a = LazyMapList::new(
+        let a = MapList::new(
             ParseTree::Addition{arg1:Box::new(ParseTree::Input{line: 0}), arg2:Box::new(ParseTree::EmptyList{line: 0}), line: 0},
             Rc::new(ExactList::new(vec![Value::Number(0), Value::Number(1)])),
         );

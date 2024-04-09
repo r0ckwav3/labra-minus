@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use super::parsetree::ParseTree;
 use super::value;
-use super::value::{LazyConcatList, LazyInductionList, LazyMapList, Value};
+use super::value::{ConcatList, InductionList, MapList, Value};
 use super::errors::RuntimeError;
 
 pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeError> {
@@ -26,7 +26,7 @@ pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeE
         ParseTree::Addition{arg1, arg2, line} => match (evaluate(arg1, input)?, evaluate(arg2, input)?) {
             (Value::Number(n1), Value::Number(n2)) => Ok(Value::Number(n1 + n2)),
             (Value::List(l1), Value::List(l2)) => {
-                Ok(Value::List(Rc::new(LazyConcatList::new(l1, l2))))
+                Ok(Value::List(Rc::new(ConcatList::new(l1, l2))))
             }
             _ => Err(RuntimeError::MismatchedTypes(format!(
                 "Cannot add number and list (line {})",
@@ -47,13 +47,13 @@ pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeE
             }
         }
 
-        ParseTree::Induction{arg1, arg2, line: _} => Ok(Value::List(Rc::new(LazyInductionList::new(
+        ParseTree::Induction{arg1, arg2, line: _} => Ok(Value::List(Rc::new(InductionList::new(
             (**arg2).clone(),
             evaluate(arg1, input)?,
         )))),
 
         ParseTree::Map{arg1, arg2, line} => match evaluate(arg1, input)? {
-            Value::List(l) => Ok(Value::List(Rc::new(LazyMapList::new((**arg2).clone(), l)))),
+            Value::List(l) => Ok(Value::List(Rc::new(MapList::new((**arg2).clone(), l)))),
             _ => Err(RuntimeError::MismatchedTypes(format!(
                 "Attempt to map number on line {}",
                 line
