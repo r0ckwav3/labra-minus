@@ -79,7 +79,7 @@ impl fmt::Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.to_string(){
             Ok(s) => write!(f, "{}", s),
-            Err(e) => write!(f, "{}", e)
+            Err(e) => write!(f, "{:?}", e)
         }
     }
 }
@@ -229,6 +229,8 @@ mod tests {
         )));
 
         assert!(a.to_string().is_err());
+        assert_eq!(format!("{}", a), "Mismatched Types - Cannot add number and list (line 0)");
+        assert_eq!(format!("{:?}", a), "MismatchedTypes(\"Cannot add number and list (line 0)\")");
     }
 
     #[test]
