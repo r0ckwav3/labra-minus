@@ -13,6 +13,8 @@ pub use inductionlist::InductionList;
 pub use maplist::MapList;
 pub use concatlist::ConcatList;
 
+const INFINITE_LIST_PREVIEW_LENGTH: i64 = 3;
+
 #[derive(Clone)]
 pub enum Value {
     Number(i64),
@@ -60,12 +62,12 @@ impl Value {
     }
 }
 
-// this way of doing display is slightly scuffed, but it makes error handling easier
+// this way of doing display is slightly scuffed, but it makes error handling nicer
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.to_string(){
             Ok(s) => write!(f, "{}", s),
-            Err(e) => write!(f, "{:?}", e)
+            Err(e) => write!(f, "{}", e)
         }
     }
 }
@@ -74,7 +76,7 @@ impl fmt::Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.to_string(){
             Ok(s) => write!(f, "{}", s),
-            Err(e) => write!(f, "{:?}", e)
+            Err(e) => write!(f, "{}", e)
         }
     }
 }
@@ -188,7 +190,7 @@ mod tests {
             ParseTree::EmptyList{line: 0},
             Value::Number(0),
         )));
-        assert_eq!(format!("{}", a), "[...]");
+        assert_eq!(format!("{}", a), "[0, [], [], ...]");
 
         let a = Value::List(Rc::new(MapList::new(
             ParseTree::Addition{arg1: Box::new(ParseTree::Input{line: 0}), arg2: Box::new(ParseTree::Input{line: 0}), line: 0},
@@ -213,7 +215,7 @@ mod tests {
             Value::Number(4),
             Value::List(Rc::new(ExactList::new(vec![]))),
         ])));
-        assert_eq!(format!("{}", a), "[[...], [0, 1], [2], 3, 4, []]");
+        assert_eq!(format!("{}", a), "[[0, [], [], ...], [0, 1], [2], 3, 4, []]");
     }
 
     #[test]
