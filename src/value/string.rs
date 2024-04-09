@@ -1,5 +1,7 @@
-use super::{ExactList, Value};
 use std::rc::Rc;
+
+use super::Value;
+use super::exactlist::ExactList;
 
 pub struct StringError;
 
