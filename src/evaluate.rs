@@ -19,8 +19,7 @@ pub fn evaluate(expression: &ParseTree, input: &Value) -> Result<Value, RuntimeE
         },
 
         ParseTree::Encapsulate{arg, line: _} => {
-            let newlist = vec![evaluate(arg, input)?];
-            Ok(Value::List(Rc::new(value::ExactList::new(newlist))))
+            Ok(Value::List(Rc::new(value::EncapsulateList::new(*arg.to_owned(), input.clone()))))
         }
 
         ParseTree::Addition{arg1, arg2, line} => match (evaluate(arg1, input)?, evaluate(arg2, input)?) {
