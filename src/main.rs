@@ -1,18 +1,19 @@
 use std::env;
 use std::fs;
 use std::rc::Rc;
+use std::process::ExitCode;
 
 mod evaluate;
 mod parsetree;
-mod string;
 mod value;
+use value::string;
 mod errors;
 
-fn main() {
+fn main() -> ExitCode{
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         println!("Please provide an filepath, such as with the command below.\n >> cargo labra-minus -- your/filepath/here.txt");
-        return;
+        return ExitCode::FAILURE;
     }
 
     let filepath = &args[1];
@@ -23,7 +24,7 @@ fn main() {
         }
         Err(e) => {
             println!("could not read file {}: {:?}", filepath, e);
-            return;
+            return ExitCode::FAILURE;
         }
     }
 
@@ -35,7 +36,7 @@ fn main() {
         }
         Err(e) => {
             println!("Parsing error: {}", e);
-            return;
+            return ExitCode::FAILURE;
         }
     }
 
@@ -63,11 +64,13 @@ fn main() {
         Ok(v) => {
             println!("{}", v);
             if let Ok(s) = string::list_to_string(&v) {
-                println!("{}", s)
+                println!("{}", s);
             }
+            ExitCode::SUCCESS
         }
         Err(e) => {
             println!("Runtime error: {}", e);
+            ExitCode::FAILURE
         }
     }
 }
