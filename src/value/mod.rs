@@ -8,10 +8,12 @@ pub mod exactlist;
 pub mod inductionlist;
 pub mod maplist;
 pub mod concatlist;
+pub mod encapsulatelist;
 pub use exactlist::ExactList;
 pub use inductionlist::InductionList;
 pub use maplist::MapList;
 pub use concatlist::ConcatList;
+pub use encapsulatelist::EncapsulateList;
 
 const INFINITE_LIST_PREVIEW_LENGTH: i64 = 3;
 
@@ -239,6 +241,38 @@ mod tests {
             ParseTree::Addition{arg1:Box::new(ParseTree::Input{line: 0}), arg2:Box::new(ParseTree::EmptyList{line: 0}), line: 0},
             Rc::new(ExactList::new(vec![Value::Number(0), Value::Number(1)])),
         );
+        assert!(a.index(0).is_err());
+    }
+
+    #[test]
+    fn simple_encapsulate_test() {
+        let a = EncapsulateList::new(
+            ParseTree::Number { n: 5, line: 0 },
+            Value::Number(0)
+        );
+        assert_eq!(a.length().expect("length error"), 1);
+
+        match a.index(0).expect("length error") {
+            Value::Number(n) => assert_eq!(n, 5),
+            _ => panic!("Bad return type"),
+        }
+
+        assert!(a.force_resolve().is_ok());
+    }
+
+    #[test]
+    fn invalid_encapsulate_test() {
+        let a = EncapsulateList::new(
+            ParseTree::Addition {
+                arg1: Box::new(ParseTree::Number { n: 0, line: 0 }),
+                arg2: Box::new(ParseTree::EmptyList { line: 0 }),
+                line: 0
+            },
+            Value::Number(0)
+        );
+        assert_eq!(a.length().expect("length error"), 1);
+
+        assert!(a.force_resolve().is_err());
         assert!(a.index(0).is_err());
     }
 }

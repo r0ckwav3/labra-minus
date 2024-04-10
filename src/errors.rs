@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ParseError {
     InvalidCharacter(String),
     UnexpectedEOF,
@@ -9,7 +9,7 @@ pub enum ParseError {
     EmptyFile,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum RuntimeError {
     OutOfBounds(String),
     ResolvingInfiniteList(String),
